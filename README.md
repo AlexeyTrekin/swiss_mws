@@ -41,7 +41,14 @@ Features:
     to enter the results of the fights into the tournament.
     A csv file with sorted list of fighters and their HP will be saved, 
     so you could show it to the fencers on the big screen
- 
+ 5. If the working directory is clear, and the process did not interrupt, 
+    you can use automatic filenames typing just:
+    ```bash
+    round
+    update 
+    ```
+    and adding the fights score in-place into the file 'N_pairs.csv', N is round number
+    
  5. If after a certain round the conditions of the finals are met, 
     the app will report it and the list of the finalists into command line.
     Type

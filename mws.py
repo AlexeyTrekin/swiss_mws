@@ -15,46 +15,62 @@ if __name__ == '__main__':
         v = False
 
     wait = True
+    round_num = 0
     while wait:
         command = input()
+        split = command.split(' ')
 
         if command == 'exit':
             wait = False
             break
-
-        split = command.split(' ')
-        if len(split) < 2:
+        # ignore accidental 'enter' without warnings
+        elif command == '':
             continue
 
+        elif split[0] == 'round':
+            round_num += 1
+            # Automatic file name
+            if len(split) == 1:
+                filename = str(round_num)
+            else:
+                filename = split[1]
 
-        if split[0] == 'round':
             t.swissPairings()
             if v:
                 print(t.pairings)
             try:
-                t.pairs_to_csv(split[1] + '_pairs.csv')
-                t.standings_to_txt(split[1] + '_standings.txt')
-                print("New pairs calculated\n")
+                t.pairs_to_csv(filename + '_pairs.csv')
+                t.standings_to_txt(filename + '_standings.txt')
+                print("New pairs calculated, saved to file " + filename + '_pairs.csv')
             except Exception as e:
-                print("Failed to write to file {}. \n".format(split[1]))
+                print("Failed to write to file {} " + filename + '_pairs.csv')
                 if v:
                     print(str(e))
 
         elif split[0] == 'update':
-            if not Path(split[1]).exists():
-                print('File {} does not exist'.format(split[1]))
+            # Automatic file name
+            if len(split) == 1:
+                filename = str(round_num)
             else:
-                try:
-                    t.results_from_csv(split[1])
-                    t.standings_to_csv(split[1].replace('.csv', '_standings_after.csv'))
-                    print("Results from {} imported\n".format(split[1]))
-                    if v:
-                        print(t.fighters)
+                filename = split[1]
 
-                except Exception as e:
-                    print("Failed to import results from file {}. ".format(split[1]))
-                    if v:
-                        print(str(e))
+            if not Path(filename).exists():
+                filename = filename + '_pairs.csv'
+                if not Path(filename).exists():
+                    print('File {} does not exist'.format(filename))
+                    continue
+
+            try:
+                t.results_from_csv(filename)
+                t.standings_to_csv(filename.replace('.csv', '_standings_after.csv'))
+                print("Results from {} imported\n".format(filename))
+                if v:
+                    print(t.fighters)
+
+            except Exception as e:
+                print("Failed to import results from file {}. ".format(filename))
+                if v:
+                    print(str(e))
 
         else:
             print('Unknown command, only round and update can be used')

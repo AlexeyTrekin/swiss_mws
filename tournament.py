@@ -3,6 +3,7 @@ from pathlib import Path
 from fighter import Fighter, fighter_from_str
 from typing import Tuple, List
 
+
 def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     """
     To put a record of a fight to the data
@@ -14,6 +15,22 @@ def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     f1.fight(f2, result[0])
     f2.fight(f1, result[1])
 
+
+def validate_score(sc1: str, sc2: str):
+    try:
+        sc1 = int(sc1)
+        sc2 = int(sc2)
+    except ValueError as e:
+        print("Results of the fight must be integer!")
+        raise e
+    # Convert score to positive, because we only substract points in fights
+    if sc1 < 0:
+        sc1 *= -1
+    if sc2 < 0:
+        sc2 *= -1
+    if sc1 > 4 or sc2 > 4:
+        raise ValueError("Results must be not greater than 4")
+    return sc1, sc2
 
 def hp(fighter: Fighter) -> int:
     # Function to sort fighters
@@ -63,8 +80,8 @@ class Tournament:
 
     def update_fighters(self, name1: str, name2:str, score: Tuple[int, int]):
         """
-        :param f1: unique name of the first fighter
-        :param f2: unique name of the second fighter
+        :param name1: unique name of the first fighter
+        :param name2: unique name of the second fighter
         :param score: difference in score. If negative, HP will diminish, if positive - increase.
         :return:
         """
@@ -115,14 +132,15 @@ class Tournament:
         with open(decorate(filename), 'w') as dst:
             dst.write('RED, Red HP, Red score, Blue score, Blue HP, BLUE\n')
             for p in self.pairings:
-                dst.write(p[0].name + ',' + str(p[0].hp) +  ', , , ' + str(p[1].hp) + ',' + p[1].name + '\n')
+                dst.write(p[0].name + ',' + str(p[0].hp) + ', , , ' + str(p[1].hp) + ',' + p[1].name + '\n')
 
     def results_from_csv(self, filename):
         with open(filename) as src:
             for p in src.readlines()[1:]:
                 split = p.split(',')
-                self.update_fighters(split[0].rstrip().strip('\"'), split[5].rstrip().strip('\"'),
-                                     (int(split[2].rstrip().strip('\"')), int(split[3].rstrip().strip('\"'))))
+                score = validate_score(split[2].rstrip().strip('\"'), split[3].rstrip().strip('\"'))
+                self.update_fighters(split[0].rstrip().strip('\"'), split[5].rstrip().strip('\"'), score)
+        self.remove()
 
     def swissPairings(self):
         """Returns a list of pairs of players for the next round of a match in this tour.
@@ -136,7 +154,7 @@ class Tournament:
         Returns: a list of tuples of fighters
         """
 
-        if len(self.fighters) %2 != 0 or len(self.fighters) == 0:
+        if len(self.fighters) % 2 != 0 or len(self.fighters) == 0:
             raise ValueError("Number of fighters is {}, does not suit for pairing".format(len(self.fighters)))
 
         standings = sorted(self.fighters, key=hp)
@@ -175,12 +193,11 @@ class Tournament:
                   "Ready finalists are:")
             print([f for f in self.fighters if f.hp > 0])
             print('Candidates for additional round:')
-            print([f for f in self.fighters if f.hp < 0])
+            print([f for f in self.fighters if f.hp <= 0])
             return
         elif len(self.fighters) - len(new_outs) <= 6:
             print("We have the finalists:")
             print([f for f in self.fighters if f.hp > 0])
-            return
         # We leave one lucky fighter from the list if there is uneven number left
         elif (len(self.fighters) - len(new_outs)) % 2 != 0:
             lucky = random.choice(new_outs)
