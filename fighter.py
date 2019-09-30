@@ -15,6 +15,9 @@ class Fighter:
         opps = [':'.join([str(key), str(value)]) for key, value in self.enemies.items()]
         return ','.join([self.name, str(self.hp)] + opps)
 
+    def to_list(self):
+        return [self.name, str(self.hp), '']
+
     def fight(self, other, hp_lost):
         if other.name in self.enemies.keys():
             self.enemies[other.name] += 1
