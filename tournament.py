@@ -3,7 +3,6 @@ from pathlib import Path
 from fighter import Fighter, fighter_from_str
 from typing import Tuple, List
 
-
 def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     """
     To put a record of a fight to the data
@@ -14,23 +13,6 @@ def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     """
     f1.fight(f2, result[0])
     f2.fight(f1, result[1])
-
-
-def validate_score(sc1: str, sc2: str):
-    try:
-        sc1 = int(sc1)
-        sc2 = int(sc2)
-    except ValueError as e:
-        print("Results of the fight must be integer!")
-        raise e
-    # Convert score to positive, because we only substract points in fights
-    if sc1 < 0:
-        sc1 *= -1
-    if sc2 < 0:
-        sc2 *= -1
-    if sc1 > 4 or sc2 > 4:
-        raise ValueError("Results must be not greater than 4")
-    return sc1, sc2
 
 def hp(fighter: Fighter) -> int:
     # Function to sort fighters
@@ -66,7 +48,7 @@ def decorate(filename):
 
 class Tournament:
 
-    def __init__(self, fighters: List[Fighter]=None, maxHP=12, fightCap=3):
+    def __init__(self, fighters: List[Fighter]=None, maxHP=12, fightCap=4):
 
         if fighters is not None:
             self.fighters = fighters
@@ -78,7 +60,7 @@ class Tournament:
         self.fightCap = fightCap
         self.pairings = []
 
-    def update_fighters(self, name1: str, name2:str, score: Tuple[int, int]):
+    def update_fighters(self, name1: str, name2: str, score: Tuple[int, int]):
         """
         :param name1: unique name of the first fighter
         :param name2: unique name of the second fighter
@@ -97,50 +79,67 @@ class Tournament:
             raise ValueError("One of the fighters named {}, {} not found".format(name1, name2))
         fight(f1, f2, score)
 
+    def parse_result(self, result):
+        """
+
+        :param result:
+        :return:
+        """
+        try:
+            sc1 = int(result[0][1])
+            sc2 = int(result[1][1])
+        except ValueError as e:
+            print("Results of the fight must be integer!")
+            raise e
+        except IndexError as e:
+            print("Results of the fight must be ((name1, res1),(name2, res2))!")
+            raise e
+
+            # Convert score to positive, because we only substract points in fights
+        if sc1 < 0:
+            sc1 *= -1
+        if sc2 < 0:
+            sc2 *= -1
+        if sc1 > self.fightCap or sc2 > self.fightCap:
+            raise ValueError("Results must be not greater than {}".format(self.fightCap))
+
+        return result[0][0], result[1][0], (sc1, sc2)
+
     def read_fighters(self, filename: str):
         with open(filename) as src:
             self.fighters = [fighter_from_str(s, self.maxHP) for s in src.readlines()]
 
-    def standings_to_txt(self, filename: str):
-        with open(decorate(filename), 'w') as dst:
-            for f in self.fighters:
-                dst.write(f.to_str() + '\n')
-
-    def all_to_txt(self, filename: str):
-        with open(decorate(filename), 'w') as dst:
-            for f in self.fighters:
-                dst.write(f.to_str() + '\n')
-        for f in self.outs:
-            dst.write(f.to_str() + '\n')
-
-    def standings_to_csv(self, filename):
+    def write_standings(self, api, round_num):
         """
-        Writes fighters list for display as a table in format "name, HP", sorted by HP.
-        :param filename:
+
+        :param api: API that complies with the format
+        :param round_num: Number of the round to which we should write the standings
         :return:
         """
-        with open(decorate(filename), 'w') as dst:
-            for f in sorted(self.fighters, key=hp):
-                dst.write(repr(f) + '\n')
+        api.write(self.fighters, round_num)
 
-    def pairs_to_csv(self, filename):
+    def write_pairs(self, api, round_num):
         """
-        Writes fights (pairs) list for display as a table in format "name1, , , name2"
-        :param filename:
+
+        :param api: API that complies with the format
+        :param round_num: Number of the round to which we should write the pairings
         :return:
         """
-        with open(decorate(filename), 'w') as dst:
-            dst.write('RED, Red HP, Red score, Blue score, Blue HP, BLUE\n')
-            for p in self.pairings:
-                dst.write(p[0].name + ',' + str(p[0].hp) + ', , , ' + str(p[1].hp) + ',' + p[1].name + '\n')
+        return api.write(self.pairings, round_num)
 
-    def results_from_csv(self, filename):
-        with open(filename) as src:
-            for p in src.readlines()[1:]:
-                split = p.split(',')
-                score = validate_score(split[2].rstrip().strip('\"'), split[3].rstrip().strip('\"'))
-                self.update_fighters(split[0].rstrip().strip('\"'), split[5].rstrip().strip('\"'), score)
-        self.remove()
+    def read_results(self, api, round_num):
+        """
+
+        :param api: API that complies with the format
+        :param round_num:  Number of the round from which we should read the pairings results
+        :return: list of fight results to apply to the fighters.
+        Format: tuple of tuples ((fighter1, result1), (figther2, result2)), each is a string
+        """
+
+        # we parse and check the results before the tournament update in order to maintain sort of consistency
+        results = [self.parse_result(res) for res in api.read(round_num)]
+        for res in results:
+            self.update_fighters(*res)
 
     def swissPairings(self):
         """Returns a list of pairs of players for the next round of a match in this tour.
