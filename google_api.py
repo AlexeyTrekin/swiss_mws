@@ -2,7 +2,7 @@ import httplib2
 import apiclient.discovery
 from oauth2client.service_account import ServiceAccountCredentials as SAC
 from google_formatting import get_data_request, get_format_request, get_pair_position
-CREDENTIALS_FILE = 'mws-tournament-fa7e5f4c8445.json'
+CREDENTIALS_FILE = 'google_token.json'
 
 
 credentials = SAC.from_json_keyfile_name(CREDENTIALS_FILE, ['https://www.googleapis.com/auth/spreadsheets',
