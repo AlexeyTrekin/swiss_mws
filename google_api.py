@@ -85,7 +85,17 @@ class GoogleAPI:
         return self.SpreadsheetURL
 
     def read(self, round_num):
-        return pairs
+        data = []
+        for area in range(self.num_areas):
+            read_range = get_pair_position(round_num, area, 1000)
+            print(read_range)
+            response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
+                                                           range=read_range).execute()
+            # response['values'] = [[fighter1, hp1, result1, result2, hp2, fighter2],[...]]
+            # we format it in the api standard ((fighter1, result1), (figther2, result2))
+            results = [((fight[0], fight[2]), (fight[5], fight[3])) for fight in response['values']]
+            data += results
+        return data
 
     def share(self, collaborators):
         drive_service = apiclient.discovery.build('drive', 'v3', http=httpAuth)

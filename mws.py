@@ -6,6 +6,7 @@ from google_api import GoogleAPI
 
 def update(t, api, round_num):
     t.read_results(api, round_num)
+    t.remove()
     print("Results for round {} imported\n".format(round_num))
     if v:
         print(t.fighters)
@@ -46,8 +47,8 @@ if __name__ == '__main__':
     # API setup
     csv_api = CsvApi('/home/trekin/Data/test', 'mws1', decorate=False)
     google_api = GoogleAPI("1P4cP-V8FWYa7Jwu1IEEWSQ1dmMG9vu6El-x54xspifQ", 2,
-                           "test", collaborators=["alexey.trekin@gmail.com"], rounds=5)
-
+                           "test", collaborators=[], rounds=5)
+    #
     wait = True
     round_num = 0
     print("Tournament ready")
@@ -66,7 +67,7 @@ if __name__ == '__main__':
         elif split[0] == 'round':
             if round_num > 0:
                 try:
-                    update(t, csv_api, round_num)
+                    update(t, google_api, round_num)
                 except Exception as e:
                     print('Failed to update round {}. Format round results correctly and try again'.format(round_num))
                     print(str(e))

@@ -137,7 +137,8 @@ class Tournament:
         """
 
         # we parse and check the results before the tournament update in order to maintain sort of consistency
-        results = [self.parse_result(res) for res in api.read(round_num)]
+        data = api.read(round_num)
+        results = [self.parse_result(res) for res in data]
         for res in results:
             self.update_fighters(*res)
 
