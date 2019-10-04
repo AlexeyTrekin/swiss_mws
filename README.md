@@ -14,6 +14,8 @@ Features:
 
 # Usage:
 
+1. Setup the config.py file. Add all the secretaries' e-mails to 'collaborators'; let doogle_doc=None if you do not have it yet.
+
 1. Type in command line
    
     ```bash
@@ -21,26 +23,24 @@ Features:
     ``` 
     where fighters_list is a text file with the fighters names each in a new row (see tests for examples).
     Now the script is running and fighters are initialized with 12 HP (see response "Tournament ready")
+    
 2. To calculate pairs and start a new round, type
 
     ```bash
-   round filename 
+   round 
    ```
-   where 'filename' is a base name to save the round data (standings and pairs)
-   Pairs are saved in filename_pairs.csv, and standings in filename_standings.txt
-   
- 3. After the fights, enter all the results of each fight into the '..._pairs.csv'.
- The results should be negative, as we substract HP from participants. 
- You may as well save it to another file. Save it only as CSV or plain-text file, the app does not understand excel format
+   The link to the google sheet will be printed into command line
+ 3. Open the link for the display and the secretaries
+ 
+ 3. Enter all the results of each fight into the google sheet. Save the sheet with ctrl+s to ensure all is OK
  
  4.  Type into command line
     
     ```bash
-    update filname_pairs.csv
+    round
     ```
-    to enter the results of the fights into the tournament.
-    A csv file with sorted list of fighters and their HP will be saved, 
-    so you could show it to the fencers on the big screen
+    to enter the results of the fights into the tournament and make a new sheet in google docs
+    
  5. If the working directory is clear, and the process did not interrupt, 
     you can use automatic filenames typing just:
     ```bash
@@ -57,8 +57,8 @@ Features:
     ```
     to close the app
     
- 6. If on a certain stage the results are corrupted, you can always load the state of the tournament,
-  by exiting it and entering again with a correct 'filename_standings.txt' as argument:
-    ```bash
-        python mws.py filename_standings.txt
-    ``` 
+ 6. If on a certain stage the results are corrupted, you can enter the right numbers into the sheet and do
+ ```bash
+ restart <N>
+ ```
+ where N is number of correctly entered rounds
