@@ -191,13 +191,17 @@ class Tournament:
         if len(self.fighters) - len(new_outs) <= 2:
             print("We need to setup an additional round to choose finalists.",
                   "Ready finalists are:")
-            print([f for f in self.fighters if f.hp > 0])
+            finalists = [f for f in self.fighters if f.hp > 0]
+            print(finalists)
             print('Candidates for additional round:')
-            print([f for f in self.fighters if f.hp <= 0])
-            return
+            candidates = [f for f in self.fighters if f.hp <= 0]
+            print(candidates)
+            return finalists, candidates
         elif len(self.fighters) - len(new_outs) <= 6:
             print("We have the finalists:")
-            print([f for f in self.fighters if f.hp > 0])
+            finalists = [f for f in self.fighters if f.hp > 0]
+            print(finalists)
+            return finalists, []
         # We leave one lucky fighter from the list if there is uneven number left
         elif (len(self.fighters) - len(new_outs)) % 2 != 0:
             lucky = random.choice(new_outs)
@@ -208,4 +212,5 @@ class Tournament:
         for f in new_outs:
             self.fighters.remove(f)
         self.outs += new_outs
+
 
