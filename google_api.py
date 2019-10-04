@@ -1,3 +1,4 @@
+import time
 import httplib2
 import apiclient.discovery
 from oauth2client.service_account import ServiceAccountCredentials as SAC
@@ -38,7 +39,7 @@ class GoogleAPI:
             self._spreadsheet_id = spreadsheet_id
         else:
             self._spreadsheet_id = create_new_doc(name, **kwargs)
-        if collaborators is not None:
+        if collaborators:
             self.share(collaborators)
         #for r in range(rounds):
         #    self.fill_heading(r)
@@ -92,6 +93,7 @@ class GoogleAPI:
     def share(self, collaborators):
         drive_service = apiclient.discovery.build('drive', 'v3', http=httpAuth)
         for email in collaborators:
+            time.sleep(2)
             drive_service.permissions().create(
                 fileId=self._spreadsheet_id,
                 body={'type': 'user', 'role': 'writer', 'emailAddress': email},

@@ -2,7 +2,7 @@ import sys
 from tournament import Tournament
 from csv_api import CsvApi
 from google_api import GoogleAPI
-
+from config import google_doc, collaborators, csv_folder, csv_name
 
 def update(t, api, round_num):
     t.read_results(api, round_num)
@@ -62,11 +62,9 @@ def main():
     #Tournament setup
     t = start(fighters_file)
     # API setup
-    csv_api = CsvApi('/home/trekin/Data/test', 'mws1', decorate=False)
-    google_api = GoogleAPI("1P4cP-V8FWYa7Jwu1IEEWSQ1dmMG9vu6El-x54xspifQ", 2,
-                           "test", collaborators=[])
-    #google_api = GoogleAPI(None, 2, "test", collaborators=['alexey.trekin@gmail.com'])
-    #
+    csv_api = CsvApi(csv_folder, csv_name, decorate=False)
+    google_api = GoogleAPI(google_doc, 2,
+                           "MwSB", collaborators=collaborators)
     round_num = 0
     print("Tournament ready")
 
