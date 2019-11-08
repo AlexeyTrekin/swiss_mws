@@ -105,9 +105,11 @@ class Tournament:
 
         return result[0][0], result[1][0], (sc1, sc2)
 
-    def read_fighters(self, filename: str):
+    def read_fighters(self, filename: str, shuffle=False):
         with open(filename) as src:
             self.fighters = [fighter_from_str(s, self.maxHP) for s in src.readlines()]
+            if shuffle:
+                random.shuffle(self.fighters)
 
     def write_standings(self, api, round_num):
         """
