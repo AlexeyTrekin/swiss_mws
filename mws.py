@@ -2,7 +2,8 @@ import sys
 from tournament import Tournament
 from csv_api import CsvApi
 from google_api import GoogleAPI
-from config import google_doc, collaborators, csv_folder, csv_name
+from config import google_doc, collaborators, csv_folder, csv_name, main_api
+
 
 def update(t, api, round_num):
     t.read_results(api, round_num)
@@ -62,9 +63,16 @@ def main():
     #Tournament setup
     t = start(fighters_file)
     # API setup
-    csv_api = CsvApi(csv_folder, csv_name, decorate=False)
-    google_api = GoogleAPI(google_doc, 2,
+
+    if main_api == 'google':
+        api_1 = GoogleAPI(google_doc, 2,
                            "MwSB", collaborators=collaborators)
+        api_2 = CsvApi(csv_folder, csv_name, decorate=False)
+    else:
+        api_2 = GoogleAPI(google_doc, 2,
+                           "MwSB", collaborators=collaborators)
+        api_1 = CsvApi(csv_folder, csv_name, decorate=False)
+
     round_num = 0
     print("Tournament ready")
 
@@ -82,11 +90,11 @@ def main():
             try:
                 res = None
                 if round_num > 0:
-                    res = update(t, google_api, round_num)
+                    res = update(t, api_1, round_num)
                 if res is not None:
-                    set_final(res[0], res[1], google_api)
+                    set_final(res[0], res[1], api_1)
                 else:
-                    set_round(t, [csv_api, google_api], round_num+1)
+                    set_round(t, [api_2, api_1], round_num+1)
             except Exception as e:
                 print('Failed to update round {}. Format round results correctly and try again'.format(round_num))
                 print(str(e))
@@ -101,13 +109,13 @@ def main():
                     print('Enter integer number of correctly passed rounds')
                     continue
             # restart the tournament and update it with the specified number of rounds
-            t_tmp = restart(fighters_file, google_api, round_num)
+            t_tmp = restart(fighters_file, api_1, round_num)
             if t_tmp is not None:
                 # it means that all the rounds were imported
                 # So we can setup a new round
                 t = t_tmp
                 round_num += 1
-                set_round(t, [csv_api, google_api], round_num)
+                set_round(t, [api_2, api_1], round_num)
             else:
                 # Some rounds were not imported correctly, so we can proceed manually,
                 # but we do not want to lose the data due to overwriting,
