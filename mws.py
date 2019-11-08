@@ -1,8 +1,11 @@
 import sys
-from tournament import Tournament
-from csv_api import CsvApi
-from google_api import GoogleAPI
+
+from tournament.tournament import Tournament
+from api.csv_api import CsvApi
+from api.google_api import GoogleAPI
 import config
+from pairings.swiss_pairings import swissPairings
+
 
 
 def update(t, api, round_num):
@@ -14,7 +17,7 @@ def update(t, api, round_num):
 
 def set_round(t, apis, round_num):
     # Automatic file name
-    t.swissPairings()
+    t.make_pairs()
     try:
         for api in apis:
             filename = t.write_pairs(api, round_num)
@@ -31,7 +34,7 @@ def set_final(finalists, candidates, api):
 
 
 def start(fighters_file):
-    t = Tournament()
+    t = Tournament(pairing_function=swissPairings)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 
@@ -47,7 +50,6 @@ def restart(fighters_file, api, rounds_passed):
             print(str(e))
             return
     return t
-
 
 
 def main():

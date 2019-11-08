@@ -2,7 +2,7 @@ import time
 import httplib2
 import apiclient.discovery
 from oauth2client.service_account import ServiceAccountCredentials as SAC
-from google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
+from api.google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
 CREDENTIALS_FILE = 'google_token.json'
 
 
