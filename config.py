@@ -11,4 +11,7 @@ csv_name = 'mws2'
 csv_folder = '/home/trekin/Data/test'
 
 # main api - google or csv
-main_api = 'csv'
+main_api = 'google'
+
+# randomize the pairs in the first round or not
+random_pairs = False
