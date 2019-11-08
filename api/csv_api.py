@@ -1,5 +1,23 @@
 from pathlib import Path
 
+def decorate(filename):
+    """
+    We do not want to lose any of the data due to overwriting
+    :param filename:
+    :return:
+    """
+    if Path(filename).exists:
+        noext = filename[:filename.rfind('.')]
+        ext = filename[filename.rfind('.'):]
+        decorated = filename
+        i=1
+        while Path(decorated).exists():
+            decorated = noext + str(i) + ext
+            i += 1
+        return decorated
+    else:
+        return filename
+
 class CsvApi:
 
     def __init__(self, folder, prefix, decorate=False):

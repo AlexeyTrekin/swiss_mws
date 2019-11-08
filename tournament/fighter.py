@@ -78,3 +78,8 @@ def fighter_from_str(line: str, maxHP: int) -> Fighter:
         opp = cell.rstrip().split(':')
         f.enemies[opp[0]] = int(opp[1])
     return f
+
+
+def hp(fighter: Fighter) -> int:
+    # Function to sort fighters
+    return fighter.hp

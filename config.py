@@ -11,4 +11,4 @@ csv_name = 'mws2'
 csv_folder = '/home/trekin/Data/test'
 
 # main api - google or csv
-main_api = 'csv'
+main_api = 'google'
