@@ -1,4 +1,5 @@
-from tournament.fighter import Fighter, hp
+from ..tournament.fighter import Fighter, hp
+
 
 def alreadyPlayed(player1: Fighter, player2: Fighter) -> bool:
     """Have these two players already played in this tour?
@@ -8,7 +9,7 @@ def alreadyPlayed(player1: Fighter, player2: Fighter) -> bool:
     return player1.played(player2) > 0 or player2.played(player1) > 0
 
 
-def swissPairings(fighters):
+def swiss_pairings(fighters):
     """Returns a list of pairs of players for the next round of a match in this tour.
 
     Assuming that there are an even number of players registered, each player
@@ -21,7 +22,7 @@ def swissPairings(fighters):
     """
 
     if len(fighters) % 2 != 0 or len(fighters) == 0:
-        raise ValueError("Number of fighters is {}, does not suit for pairing".format(len(self.fighters)))
+        raise ValueError("Number of fighters is {}, does not suit for pairing".format(len(fighters)))
 
     standings = sorted(fighters, key=hp)
 
