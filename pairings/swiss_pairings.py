@@ -1,7 +1,7 @@
 from ..tournament.fighter import Fighter, hp
 
 
-def alreadyPlayed(player1: Fighter, player2: Fighter) -> bool:
+def already_played(player1: Fighter, player2: Fighter) -> bool:
     """Have these two players already played in this tour?
 
         A boolean indicating if this would be a rematch
@@ -30,7 +30,7 @@ def swiss_pairings(fighters):
 
     for i in range(0, len(standings), 2):
         for j in range(i + 1, len(standings)):
-            if not alreadyPlayed(standings[i], standings[j]):
+            if not already_played(standings[i], standings[j]):
                 # good pair found, swap into place then break the inner loop
                 while j > i + 1:
                     standings[j - 1], standings[j] = standings[j], standings[j - 1]
