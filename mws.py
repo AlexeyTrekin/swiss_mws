@@ -4,8 +4,8 @@ from tournament.tournament import Tournament
 from api.csv_api import CsvApi
 from api.google_api import GoogleAPI
 import config
-from pairings.swiss_pairings import swissPairings
-
+from pairings.swiss_pairings import swiss_pairings
+from pairings.round_pairings import round_pairings
 
 
 def update(t, api, round_num):
@@ -34,7 +34,7 @@ def set_final(finalists, candidates, api):
 
 
 def start(fighters_file):
-    t = Tournament(pairing_function=swissPairings)
+    t = Tournament(pairing_function=swiss_pairings)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 
