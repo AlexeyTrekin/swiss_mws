@@ -1,5 +1,6 @@
 from tournament.fighter import Fighter, hp
 
+
 def alreadyPlayed(player1: Fighter, player2: Fighter) -> bool:
     """Have these two players already played in this tour?
 

@@ -1,6 +1,7 @@
 class Fighter:
 
     def __init__(self, name, hp=12):
+        # TODO: add ID and full name, and also club, location
         self.name = name
         # health points for all the tournament
         self.hp = hp

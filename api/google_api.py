@@ -3,6 +3,8 @@ import httplib2
 import apiclient.discovery
 from oauth2client.service_account import ServiceAccountCredentials as SAC
 from api.google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
+from api.api import Api
+
 CREDENTIALS_FILE = 'google_token.json'
 
 
@@ -31,9 +33,10 @@ def create_new_doc(name, rows=1000, columns=25):
     return spreadsheet['spreadsheetId']
 
 
-class GoogleAPI:
+class GoogleAPI(Api):
     def __init__(self, spreadsheet_id=None, num_areas=2,
                  name="", collaborators=None, **kwargs):
+        Api.__init__(self)
         self.num_areas = num_areas
         if spreadsheet_id is not None:
             self._spreadsheet_id = spreadsheet_id
