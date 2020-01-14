@@ -36,6 +36,7 @@ def generate_data_all():
     :return:
     """
     data = []
+    # Just a blank tournament
     data.append([ProxyFighter(name=str(i+1)) for i in range(12)])
     # This case emerged from our first tournament and revealed that the current method is flawed,
 

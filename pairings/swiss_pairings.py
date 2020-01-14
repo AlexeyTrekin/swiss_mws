@@ -1,5 +1,5 @@
 import numpy as np
-from ..tournament.fighter import Fighter, hp
+from tournament.fighter import Fighter, hp
 
 
 def already_played(player1: Fighter, player2: Fighter) -> bool:
