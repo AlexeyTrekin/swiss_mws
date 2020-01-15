@@ -1,4 +1,8 @@
 .idea/
+.cache
 __pycache__/
 .ipynb_checkpoints/
 google_token.json
+TM.egg-info
+build
+dist

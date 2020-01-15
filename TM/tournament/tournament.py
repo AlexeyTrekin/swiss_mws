@@ -1,5 +1,5 @@
 import random
-from tournament.fighter import Fighter, fighter_from_str
+from .fighter import Fighter, fighter_from_str
 from typing import Tuple, List
 
 def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
@@ -119,7 +119,7 @@ class Tournament:
         for res in results:
             self.update_fighters(*res)
 
-    def remove(self):
+    def remove(self, v=True):
         """
         moves the fighters with negative score out of the list
         One lucky can stand if there is need for the additional fighter to complete the even number
@@ -136,23 +136,27 @@ class Tournament:
 
         # If there 6 fighters or less, we can make finals:
         if len(self.fighters) - len(new_outs) <= 2:
-            print("We need to setup an additional round to choose finalists.",
-                  "Ready finalists are:")
             finalists = [f for f in self.fighters if f.hp > 0]
-            print(finalists)
-            print('Candidates for additional round:')
             candidates = [f for f in self.fighters if f.hp <= 0]
-            print(candidates)
+            if v:
+                print("We need to setup an additional round to choose finalists.",
+                      "Ready finalists are:")
+
+                print(finalists)
+                print('Candidates for additional round:')
+                print(candidates)
             return finalists, candidates
         elif len(self.fighters) - len(new_outs) <= 6:
-            print("We have the finalists:")
             finalists = [f for f in self.fighters if f.hp > 0]
-            print(finalists)
+            if v:
+                print("We have the finalists:")
+                print(finalists)
             return finalists, []
         # We leave one lucky fighter from the list if there is uneven number left
         elif (len(self.fighters) - len(new_outs)) % 2 != 0:
             lucky = random.choice(new_outs)
-            print('Lucky one: {}'.format(lucky))
+            if v:
+                print('Lucky one: {}'.format(lucky))
             lucky.hp = minHP
             new_outs.remove(lucky)
 

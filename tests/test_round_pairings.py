@@ -1,4 +1,4 @@
-from ..pairings.round_pairings import round_pairings
+from TM.pairings.round_pairings import round_pairings
 
 MAX_FIGHTERS = 50
 
