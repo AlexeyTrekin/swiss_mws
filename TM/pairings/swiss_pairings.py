@@ -40,12 +40,13 @@ def swiss_pairings_old(fighters):
         pairings.append((standings[i], standings[i + 1]))
     return pairings
 
-## NEW VARIANT
 
+# NEW VARIANT #
 def get_one_pair(fighters):
     first = fighters[0]
     pairs = [(first, second) for second in fighters[1:] if not already_played(first, second)]
     return pairs
+
 
 class Candidate:
     def __init__(self, pairs, fighters):
@@ -64,7 +65,7 @@ class Candidate:
         return Candidate(self.pairs + [pair], self.remaining)
 
 
-def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=5):
+def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=10):
     """Returns a list of pairs of players for the next round of a match in this tour.
 
     Assuming that there are an even number of players registered, each player
@@ -86,8 +87,8 @@ def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=5):
     # Keeping these requirements:
     # 1. Without the same pairing twice
     # 2. Minimizing the maximum point difference between matches
-    # 3. Between the variants of 2. we minimize the total point difference.
-    # First version will be pretty straightforward and will take much time and memory
+    # The current version cuts the best candidates at every iteration and thus is sped up very much, but
+    # can miss good variants
 
     candidates = [Candidate([], standings)]
     for i in range(len(standings)//2):
@@ -100,7 +101,10 @@ def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=5):
                     new_candidates.append(c.add_pair((first, second)))
         candidates = sorted(new_candidates,
                             key=lambda candidate: candidate.max_diff)[0:min(candidates_to_keep, len(new_candidates))]
-
+        # In some cases the algorithm will fail and give zero candidates for the current standings.
+        # It is a rare situation in real parameters, but we must have a solution for it
+        if len(candidates) == 0:
+            return swiss_pairings_old(fighters)
     # candidates = sorted(candidates, key=lambda candidate: candidate.max_diff*len(standings)*10 + candidate.tot_diff)
     return candidates[0].pairs
 

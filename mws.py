@@ -1,11 +1,10 @@
 import sys
 
-from tournament.tournament import Tournament
-from api.csv_api import CsvApi
-from api.google_api import GoogleAPI
+from TM.tournament import Tournament
+from TM.api.csv_api import CsvApi
+from TM.api.google_api import GoogleAPI
 import config
-from pairings.swiss_pairings import swiss_pairings
-from pairings.round_pairings import round_pairings
+from TM.pairings import swiss_pairings
 
 
 def update(t, api, round_num):
@@ -34,7 +33,7 @@ def set_final(finalists, candidates, api):
 
 
 def start(fighters_file):
-    t = Tournament(pairing_function=swiss_pairings)
+    t = Tournament(pairing_function=swiss_pairings, maxHP=config.hp, fightCap=config.cap)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 
@@ -67,12 +66,12 @@ def main():
     # API setup
 
     if config.main_api == 'google':
-        api_1 = GoogleAPI(config.google_doc, 2,
-                           "MwSB", collaborators=config.collaborators)
+        api_1 = GoogleAPI(config.google_doc, config.num_areas,
+                          "MwSabres", collaborators=config.collaborators)
         api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
     else:
-        api_2 = GoogleAPI(config.google_doc, 2,
-                           "MwSB", collaborators=config.collaborators)
+        api_2 = GoogleAPI(config.google_doc, config.num_areas,
+                          "MwSabres", collaborators=config.collaborators)
         api_1 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
 
     round_num = 0

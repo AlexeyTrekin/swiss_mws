@@ -15,3 +15,11 @@ main_api = 'google'
 
 # randomize the pairs in the first round or not
 random_pairs = False
+
+# number of the fight areas to spread the fights to
+num_areas = 1
+
+# default HP for a fighter
+hp = 20
+# the cap is maximum allowed amount of points given
+cap = 6
