@@ -1,5 +1,6 @@
+import warnings
 import numpy as np
-from tournament.fighter import Fighter, hp
+from TM.tournament import Fighter, hp
 
 
 def already_played(player1: Fighter, player2: Fighter) -> bool:
@@ -65,7 +66,7 @@ class Candidate:
         return Candidate(self.pairs + [pair], self.remaining)
 
 
-def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=10):
+def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=15):
     """Returns a list of pairs of players for the next round of a match in this tour.
 
     Assuming that there are an even number of players registered, each player
@@ -104,6 +105,7 @@ def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=10):
         # In some cases the algorithm will fail and give zero candidates for the current standings.
         # It is a rare situation in real parameters, but we must have a solution for it
         if len(candidates) == 0:
+            warnings.warn("Pairings failed to match without repeared fight!")
             return swiss_pairings_old(fighters)
     # candidates = sorted(candidates, key=lambda candidate: candidate.max_diff*len(standings)*10 + candidate.tot_diff)
     return candidates[0].pairs
