@@ -4,7 +4,7 @@ from TM.tournament import Tournament
 from TM.api.csv_api import CsvApi
 from TM.api.google_api import GoogleAPI
 import config
-from TM.pairings import swiss_pairings
+from TM.pairings import swiss_pairings, round_pairings
 
 
 def update(t, api, round_num):
@@ -32,14 +32,14 @@ def set_final(finalists, candidates, api):
     pass
 
 
-def start(fighters_file):
-    t = Tournament(pairing_function=swiss_pairings, maxHP=config.hp, fightCap=config.cap)
+def start(fighters_file, pairing_function=swiss_pairings):
+    t = Tournament(pairing_function=pairing_function, maxHP=config.hp, fightCap=config.cap)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 
 
-def restart(fighters_file, api, rounds_passed):
-    t = start(fighters_file)
+def restart(fighters_file, api, rounds_passed, pairing_function=swiss_pairings):
+    t = start(fighters_file, pairing_function)
     for round_num in range(rounds_passed):
         try:
             update(t, api, round_num+1)
@@ -62,7 +62,11 @@ def main():
         v = False
 
     #Tournament setup
-    t = start(fighters_file)
+    if config.pairing_function == 'round':
+        pairing_function = round_pairings
+    else:
+        pairing_function = swiss_pairings
+    t = start(fighters_file, pairing_function)
     # API setup
 
     if config.main_api == 'google':
@@ -110,7 +114,7 @@ def main():
                     print('Enter integer number of correctly passed rounds')
                     continue
             # restart the tournament and update it with the specified number of rounds
-            t_tmp = restart(fighters_file, api_1, round_num)
+            t_tmp = restart(fighters_file, api_1, round_num, pairing_function)
             if t_tmp is not None:
                 # it means that all the rounds were imported
                 # So we can setup a new round

@@ -21,5 +21,10 @@ num_areas = 1
 
 # default HP for a fighter
 hp = 20
+
 # the cap is maximum allowed amount of points given
 cap = 6
+
+#
+pairing_function = 'swiss'
+#pairing_function = 'round'
