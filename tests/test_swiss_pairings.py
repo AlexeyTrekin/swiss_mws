@@ -1,9 +1,10 @@
 import pytest
-from ..pairings.swiss_pairings import swiss_pairings
-from ..tournament.fighter import Fighter
+from random import randint
+from TM.pairings import swiss_pairings
+from TM.tournament import Fighter
 
-MAX_FIGHTERS = 50
-
+MAX_FIGHTERS = 100
+MAX_HP = 20
 
 class ProxyFighter:
     """
@@ -13,7 +14,7 @@ class ProxyFighter:
         self.name = name
         self.hp = hp
         if enemies is None:
-            enemies = []
+            self.enemies = []
         else:
             self.enemies = enemies
 
@@ -55,8 +56,9 @@ def generate_data_all():
                  ProxyFighter('Nekrylov', 7, ['Ryabov', 'Kashitsyn']),
                  ProxyFighter('Volodkov', 7, ['Ryabov', 'Danilov']),
                  ProxyFighter('Ryabov', 6, ['Nekrylov', 'Volodkov'])])
+
     # Big tournament to test time and memory
-    data.append([ProxyFighter(name=str(i+1)) for i in range(200)])
+    data.append([ProxyFighter(name=str(i+1), hp=randint(1, MAX_HP)) for i in range(MAX_FIGHTERS)])
 
     # Add more data samples
     return data
@@ -110,3 +112,4 @@ class TestSwissPairings:
         fighters = [Fighter(name=str(i + 1)) for i in range(11)]
         with pytest.raises(ValueError):
             swiss_pairings(fighters)
+
