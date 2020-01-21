@@ -1,5 +1,5 @@
 from pathlib import Path
-from api.api import Api
+from TM.api.api import Api
 
 
 def decorate(filename):

@@ -1,11 +1,15 @@
+from typing import List, Tuple
+from TM.tournament import Fighter
+
 class Api:
 
     def __init__(self):
         pass
 
-    def write(self, pairs, round_num):
+    def write(self,
+              pairs: List[Tuple[Fighter,Fighter]],
+              round_num: int):
         """
-
         :param pairs: a list of tuples of strings ('fighter1', 'fighter2')
         #TODO: Make it of class Fighter
         :param round_num: round number
@@ -13,7 +17,8 @@ class Api:
         """
         raise NotImplementedError
 
-    def read(self, round_num):
+    def read(self,
+             round_num: int):
         """
 
         :param round_num:

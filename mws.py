@@ -1,12 +1,9 @@
 import sys
 
-from tournament.tournament import Tournament
-from api.csv_api import CsvApi
-#from api.google_api import GoogleAPI
-from api.http_api import httpApi
+from TM.tournament import Tournament
+from TM.api import CsvApi, HttpApi, GoogleAPI
+from TM.pairings import swiss_pairings, round_pairings
 import config
-from pairings.swiss_pairings import swissPairings
-
 
 def update(t, api, round_num):
     t.read_results(api, round_num)
@@ -33,14 +30,14 @@ def set_final(finalists, candidates, api):
     pass
 
 
-def start(fighters_file):
-    t = Tournament(pairing_function=swissPairings)
+def start(fighters_file, pairing_function=swiss_pairings):
+    t = Tournament(pairing_function=pairing_function, maxHP=config.hp, fightCap=config.cap)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 
 
-def restart(fighters_file, api, rounds_passed):
-    t = start(fighters_file)
+def restart(fighters_file, api, rounds_passed, pairing_function=swiss_pairings):
+    t = start(fighters_file, pairing_function)
     for round_num in range(rounds_passed):
         try:
             update(t, api, round_num+1)
@@ -63,7 +60,11 @@ def main():
         v = False
 
     #Tournament setup
-    t = start(fighters_file)
+    if config.pairing_function == 'round':
+        pairing_function = round_pairings
+    else:
+        pairing_function = swiss_pairings
+    t = start(fighters_file, pairing_function)
     # API setup
 
     #if config.main_api == 'google':
@@ -75,7 +76,7 @@ def main():
     #                       "MwSB", collaborators=config.collaborators)
     #    api_1 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
 
-    api_1 = httpApi(num_areas=3)
+    api_1 = HttpApi(num_areas=config.num_areas)
     api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
 
     round_num = 0
@@ -114,7 +115,7 @@ def main():
                     print('Enter integer number of correctly passed rounds')
                     continue
             # restart the tournament and update it with the specified number of rounds
-            t_tmp = restart(fighters_file, api_1, round_num)
+            t_tmp = restart(fighters_file, api_1, round_num, pairing_function)
             if t_tmp is not None:
                 # it means that all the rounds were imported
                 # So we can setup a new round

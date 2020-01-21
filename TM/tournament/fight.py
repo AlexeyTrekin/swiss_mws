@@ -1,8 +1,8 @@
-from tournament.fighter import Fighter
+from .fighter import Fighter
 
 class Fight:
 
-    def __init__(self, fighter1, fighter2,
+    def __init__(self, fighter1: Fighter, fighter2: Fighter,
                  fighter1_score=0, fighter2_score=0,
                  fighter1_warns=0, fighter2_warns=0,
                  doubles=0, conducted=False, time=0.0, **kwargs):

@@ -1,10 +1,9 @@
-import warnings
 from flask import Flask, jsonify, request
 from random import choice
 import string
-from api.api import Api
-from tournament.fight import Fight
-from api.utils import split_to_areas
+from TM.api.api import Api
+from TM.tournament.fight import Fight
+from TM.api.utils import split_to_areas
 
 import threading
 
@@ -13,7 +12,7 @@ def generate_tokens(num_areas: int, length: int=10):
     return [''.join(choice(letters) for i in range(length)) for area in range(num_areas)]
 
 
-class httpApi:
+class HttpApi:
 
     def __init__(self, num_areas=1, tokens=None):
 
