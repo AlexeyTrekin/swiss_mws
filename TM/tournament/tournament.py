@@ -1,6 +1,7 @@
 import random
-from .fighter import Fighter, fighter_from_str
+from .fighter import Fighter, fighter_from_str, get_rating
 from typing import Tuple, List
+
 
 def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     """
@@ -13,13 +14,10 @@ def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     f1.fight(f2, result[0])
     f2.fight(f1, result[1])
 
-def hp(fighter: Fighter) -> int:
-    # Function to sort fighters
-    return fighter.hp
 
 class Tournament:
 
-    def __init__(self, pairing_function, fighters: List[Fighter]=None, maxHP=12, fightCap=4):
+    def __init__(self, pairing_function, fighters: List[Fighter] = None, start_rating=0, fight_cap=None):
 
         if fighters is not None:
             self.fighters = fighters
@@ -27,13 +25,19 @@ class Tournament:
             self.fighters = []
         # fighters casted out of a tournament
         self.outs = []
-        self.maxHP = maxHP
-        self.fightCap = fightCap
+        self.startRating = start_rating
+        self.fightCap = fight_cap
         self.pairings = []
         self.pairing_function = pairing_function
 
     def make_pairs(self):
         self.pairings = self.pairing_function(self.fighters)
+
+    def list_fighters(self):
+        """
+        :return: list of fighters in sorted order
+        """
+        return sorted(self.fighters, key=get_rating, reverse=True)
 
     def update_fighters(self, name1: str, name2: str, score: Tuple[int, int]):
         """
@@ -82,7 +86,7 @@ class Tournament:
 
     def read_fighters(self, filename: str, shuffle=False):
         with open(filename) as src:
-            self.fighters = [fighter_from_str(s, self.maxHP) for s in src.readlines()]
+            self.fighters = [fighter_from_str(s, self.startRating) for s in src.readlines()]
             if shuffle:
                 random.shuffle(self.fighters)
 
@@ -129,15 +133,15 @@ class Tournament:
         minHP = self.fightCap
 
         for f in self.fighters:
-            if f.hp <= 0:
+            if f.rating <= 0:
                 new_outs.append(f)
             else:
-                minHP = min(minHP, f.hp)
+                minHP = min(minHP, f.rating)
 
         # If there 6 fighters or less, we can make finals:
         if len(self.fighters) - len(new_outs) <= 2:
-            finalists = [f for f in self.fighters if f.hp > 0]
-            candidates = [f for f in self.fighters if f.hp <= 0]
+            finalists = [f for f in self.fighters if f.rating > 0]
+            candidates = [f for f in self.fighters if f.rating <= 0]
             if v:
                 print("We need to setup an additional round to choose finalists.",
                       "Ready finalists are:")
@@ -147,7 +151,7 @@ class Tournament:
                 print(candidates)
             return finalists, candidates
         elif len(self.fighters) - len(new_outs) <= 6:
-            finalists = [f for f in self.fighters if f.hp > 0]
+            finalists = [f for f in self.fighters if f.rating > 0]
             if v:
                 print("We have the finalists:")
                 print(finalists)
@@ -157,7 +161,7 @@ class Tournament:
             lucky = random.choice(new_outs)
             if v:
                 print('Lucky one: {}'.format(lucky))
-            lucky.hp = minHP
+            lucky.rating = minHP
             new_outs.remove(lucky)
 
         for f in new_outs:

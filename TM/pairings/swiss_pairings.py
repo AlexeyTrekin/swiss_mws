@@ -1,6 +1,6 @@
 import warnings
 import numpy as np
-from TM.tournament import Fighter, hp
+from TM.tournament import Fighter, get_rating
 
 
 def already_played(player1: Fighter, player2: Fighter) -> bool:
@@ -26,7 +26,7 @@ def swiss_pairings_old(fighters):
     if len(fighters) % 2 != 0 or len(fighters) == 0:
         raise ValueError("Number of fighters is {}, does not suit for pairing".format(len(fighters)))
 
-    standings = sorted(fighters, key=hp, reverse=True)
+    standings = sorted(fighters, key=get_rating, reverse=True)
 
     pairings = []
 
@@ -80,7 +80,7 @@ def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=15):
     if len(fighters) % 2 != 0 or len(fighters) == 0:
         raise ValueError("Number of fighters is {}, does not suit for pairing".format(len(fighters)))
 
-    standings = sorted(fighters, key=hp, reverse=True)
+    standings = sorted(fighters, key=get_rating, reverse=True)
 
     # Dynamic programming method with width-search and cutoff of the bad variants
     # We start from pairing all the players with the first one
