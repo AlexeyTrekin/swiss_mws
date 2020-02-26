@@ -33,7 +33,7 @@ def set_final(finalists, candidates, api):
 
 
 def start(fighters_file, pairing_function=swiss_pairings):
-    t = Tournament(pairing_function=pairing_function, start_rating=config.hp, fightCap=config.cap)
+    t = Tournament(pairing_function=pairing_function, start_rating=config.hp, fight_cap=config.cap)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 

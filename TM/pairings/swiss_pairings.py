@@ -1,5 +1,6 @@
 import warnings
 import numpy as np
+from typing import List, Tuple
 from TM.tournament import Fighter, get_rating
 
 
@@ -43,18 +44,21 @@ def swiss_pairings_old(fighters):
 
 
 # NEW VARIANT #
-def get_one_pair(fighters):
-    first = fighters[0]
-    pairs = [(first, second) for second in fighters[1:] if not already_played(first, second)]
-    return pairs
-
 
 class Candidate:
-    def __init__(self, pairs, fighters):
+    """ A Candidate pairing
+
+    It represents a pairing under construction, where .pairs are established pairs,
+    and .remaining are the fighters who do not have a pair yet
+
+    It is necessary for the swiss_pairings to store the pairing variants
+
+    """
+    def __init__(self, pairs: List[Tuple[Fighter, Fighter]], fighters: List[Fighter]):
         self.pairs = pairs
         self.remaining = [f for f in fighters if not any(f in p for p in pairs)]
 
-        diff = [abs(p[0].hp - p[1].hp) for p in pairs]
+        diff = [abs(p[0].rating - p[1].rating) for p in pairs]
         if not diff:
             self.max_diff = 0
             self.tot_diff = 0
@@ -66,7 +70,7 @@ class Candidate:
         return Candidate(self.pairs + [pair], self.remaining)
 
 
-def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=15):
+def swiss_pairings(fighters: List[Fighter], max_diff=-1, candidates_to_keep=15):
     """Returns a list of pairs of players for the next round of a match in this tour.
 
     Assuming that there are an even number of players registered, each player
@@ -98,7 +102,7 @@ def swiss_pairings(fighters, max_diff=-1, candidates_to_keep=15):
             first = c.remaining[0]
             for second in c.remaining[1:]:
                 if not already_played(first,second) and \
-                        (abs(first.hp - second.hp) <= max_diff or max_diff < 0):
+                        (abs(first.rating - second.rating) <= max_diff or max_diff < 0):
                     new_candidates.append(c.add_pair((first, second)))
         candidates = sorted(new_candidates,
                             key=lambda candidate: candidate.max_diff)[0:min(candidates_to_keep, len(new_candidates))]

@@ -10,9 +10,9 @@ class ProxyFighter:
     """
     mocks the basic functionality needed for the fighter class: has name, list of matches, and can be matched with other
     """
-    def __init__(self, name, hp=12, enemies=None):
+    def __init__(self, name, rating=12, enemies=None):
         self.name = name
-        self.hp = hp
+        self.hp = rating
         if enemies is None:
             self.enemies = []
         else:
@@ -58,7 +58,7 @@ def generate_data_all():
                  ProxyFighter('Ryabov', 6, ['Nekrylov', 'Volodkov'])])
 
     # Big tournament to test time and memory
-    data.append([ProxyFighter(name=str(i+1), hp=randint(1, MAX_HP)) for i in range(MAX_FIGHTERS)])
+    data.append([ProxyFighter(name=str(i+1), rating=randint(1, MAX_HP)) for i in range(MAX_FIGHTERS)])
 
     # Add more data samples
     return data
