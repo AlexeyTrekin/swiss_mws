@@ -20,8 +20,8 @@ def set_round(t, apis, round_num):
     try:
         for api in apis:
             filename = t.write_pairs(api, round_num)
-        #t.pairs_to_csv(filename + '_pairs.csv')
-        #t.standings_to_txt(filename + '_standings.txt')
+        # t.pairs_to_csv(filename + '_pairs.csv')
+        # t.standings_to_txt(filename + '_standings.txt')
         print("New pairs calculated, saved to file " + filename)
         # os.system('libreoffice ' + filename + '_pairs.csv')
     except Exception as e:
@@ -33,7 +33,7 @@ def set_final(finalists, candidates, api):
 
 
 def start(fighters_file, pairing_function=swiss_pairings):
-    t = Tournament(pairing_function=pairing_function, maxHP=config.hp, fightCap=config.cap)
+    t = Tournament(pairing_function=pairing_function, start_rating=config.hp, fight_cap=config.cap)
     t.read_fighters(fighters_file, shuffle=config.random_pairs)
     return t
 
@@ -129,8 +129,11 @@ def main():
                 print('The restart did not complete. '
                       'You can correct the results and restart once again')
 
+        elif split[0] == 'list':
+            print(t.list_fighters())
+
         else:
-            print('Unknown command, only round and restart <int> can be used')
+            print('Unknown command, only \'list\', \'round\' and \'restart <int>\' can be used')
 
 
 if __name__ == '__main__':
