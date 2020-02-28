@@ -1,10 +1,9 @@
 class Fighter:
 
-    def __init__(self, name, hp=12):
-        # TODO: add ID and full name, and also club, location
+    def __init__(self, name, rating=12):
         self.name = name
         # health points for all the tournament
-        self.hp = hp
+        self.rating = rating
         # a list of other fighters, with which this one has fought
         self.enemies = {}
 
@@ -14,17 +13,17 @@ class Fighter:
         :return:
         """
         opps = [':'.join([str(key), str(value)]) for key, value in self.enemies.items()]
-        return ','.join([self.name, str(self.hp)] + opps)
+        return ','.join([self.name, str(self.rating)] + opps)
 
     def to_list(self):
-        return [self.name, str(self.hp), '']
+        return [self.name, str(self.rating), '']
 
     def fight(self, other, hp_lost):
         if other.name in self.enemies.keys():
             self.enemies[other.name] += 1
         else:
             self.enemies[other.name] = 1
-        self.hp -= hp_lost
+        self.rating -= hp_lost
 
     def played(self, other):
         if other.name in self.enemies.keys():
@@ -58,10 +57,10 @@ class Fighter:
             self.enemies[o.name] -= m
 
     def __repr__(self):
-        return (self.name + ', ' + str(self.hp))
+        return self.name + ', ' + str(self.rating)
 
 
-def fighter_from_str(line: str, maxHP: int) -> Fighter:
+def fighter_from_str(line: str, start_rating: int = 0) -> Fighter:
     """
     String format:
     NAME,<HP>,<Opponent:NumOfFights>
@@ -72,15 +71,15 @@ def fighter_from_str(line: str, maxHP: int) -> Fighter:
     name = split[0].rstrip()
     f = Fighter(name)
     if len(split) > 1:
-        f.hp = int(split[1].rstrip())
+        f.rating = int(split[1].rstrip())
     else:
-        f.hp = maxHP
+        f.rating = start_rating
     for cell in split[2:]:
         opp = cell.rstrip().split(':')
         f.enemies[opp[0]] = int(opp[1])
     return f
 
 
-def hp(fighter: Fighter) -> int:
+def get_rating(fighter: Fighter) -> int:
     # Function to sort fighters
-    return fighter.hp
+    return fighter.rating

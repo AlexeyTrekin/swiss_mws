@@ -34,7 +34,7 @@ class CsvApi(Api):
         with open(filename, 'w') as dst:
             dst.write('RED, Red HP, Red score, Blue score, Blue HP, BLUE\n')
             for p in pairs:
-                dst.write(p[0].name + ',' + str(p[0].hp) + ', , , ' + str(p[1].hp) + ',' + p[1].name + '\n')
+                dst.write(p[0].name + ',' + str(p[0].rating) + ', , , ' + str(p[1].rating) + ',' + p[1].name + '\n')
         return str(filename)
 
     def read(self, round_num):
