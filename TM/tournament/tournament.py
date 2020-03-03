@@ -1,5 +1,5 @@
 import random
-from .fighter import Fighter, fighter_from_str, get_rating
+from .fighter import Fighter
 from typing import Tuple, List
 
 
@@ -37,7 +37,7 @@ class Tournament:
         """
         :return: list of fighters in sorted order
         """
-        return sorted(self.fighters, key=get_rating, reverse=True)
+        return sorted(self.fighters, key=lambda f: f.rating, reverse=True)
 
     def update_fighters(self, name1: str, name2: str, score: Tuple[int, int]):
         """
@@ -86,7 +86,7 @@ class Tournament:
 
     def read_fighters(self, filename: str, shuffle=False):
         with open(filename) as src:
-            self.fighters = [fighter_from_str(s, self.startRating) for s in src.readlines()]
+            self.fighters = [Fighter.from_str(s, self.startRating) for s in src.readlines()]
             if shuffle:
                 random.shuffle(self.fighters)
 

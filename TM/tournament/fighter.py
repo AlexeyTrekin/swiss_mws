@@ -1,24 +1,84 @@
+from enum import Enum
+from typing import Optional, List
+
+
+class Division(Enum):
+    base = 'base'
+    pl = 'pl'
+    tc = 'tc'
+
+
 class Fighter:
 
-    def __init__(self, name, rating=12):
-        self.name = name
-        # health points for all the tournament
+    def __init__(self, fighter_id: str, first_name: str, last_name: str,
+                 club: str = '', city: str = '', country: str = '',
+                 rating: int = 0, global_rating: int = 0, division: Division = Division.base,
+                 warnings: int = 0, doubles: int = 0, fights: Optional[List] = None):
+        """
+
+        :param fighter_id: UNIQUE fighter identifier
+        :param first_name: personal name
+        :param last_name: family name
+        :param club:
+        :param city:
+        :param country:
+        :param rating: tournament rating of the fighter
+        :param global_rating: Rating outside of the tournament, maybe from hfdb or hemaratings
+        :param division: FDF fighter division
+        :param warnings: number of warnings in current tournament
+        :param doubles: number of doubles in current tournament
+        :param fights: list of fights conducted by this fighter in current tournament
+        """
+
+        self.fighter_id = fighter_id
+        self.first_name = first_name
+        self.last_name = last_name
+        self.club = club
+        self.city = city
+        self.country = country
         self.rating = rating
-        # a list of other fighters, with which this one has fought
+        self.global_rating = global_rating
+        self.division = division if isinstance(division, Division) else Division(division)
+        self.warnings = warnings
+        self.doubles = doubles
+        if fights is None:
+            self.fights = []
+        else:
+            self.fights = fights
         self.enemies = {}
 
-    def to_str(self):
+    @property
+    def name(self):
+        return self.last_name + ' ' + self.first_name
+
+    @property
+    def to_dict(self):
         """
-        Format all the fighter data in the form we need to read it further
+        A wrapper to make the dict representation more useful
+        Some of the values are substituted
         :return:
         """
-        opps = [':'.join([str(key), str(value)]) for key, value in self.enemies.items()]
-        return ','.join([self.name, str(self.rating)] + opps)
+        res = dict(self.__dict__)
+        res['division'] = self.division.value
+        return res
+
+    def __repr__(self):
+        return self.name + ', ' + str(self.rating)
 
     def to_list(self):
+        """
+        Legacy - for google api
+        :return:
+        """
         return [self.name, str(self.rating), '']
 
     def fight(self, other, hp_lost):
+        """
+        Legacy - for current tournament's fight()
+        :param other:
+        :param hp_lost:
+        :return:
+        """
         if other.name in self.enemies.keys():
             self.enemies[other.name] += 1
         else:
@@ -26,6 +86,11 @@ class Fighter:
         self.rating -= hp_lost
 
     def played(self, other):
+        """
+        Legacy. Will be replaced by self.fights and its queries
+        :param other:
+        :return:
+        """
         if other.name in self.enemies.keys():
             return self.enemies[other.name]
         else:
@@ -33,7 +98,9 @@ class Fighter:
 
     def normalize_played(self, others):
         """
-        If all others have played at least once, wa cannot make pairings any more, as the system tries to
+        Not used now. Probably not necessary for new swiss system
+
+        If all others have played at least once, we cannot make pairings any more, as the system tries to
         avoid repetitive figths. So, if all the 'played' vaules for current opponents are positive,
         we substract from it to have zeros again
         This can be not mutual, as there may be free slots for one of the fighters and no slots for the other one.
@@ -41,6 +108,7 @@ class Fighter:
         :param others: list of Fighters to match
         :return: None
         """
+        # TODO: test if there are problems without it and remove if not
         min_played = 99
 
         for o in others:
@@ -56,30 +124,25 @@ class Fighter:
         for o in others:
             self.enemies[o.name] -= m
 
-    def __repr__(self):
-        return self.name + ', ' + str(self.rating)
+    @classmethod
+    def from_str(cls, line: str, start_rating: int = 0):
 
+        """
+        Legacy. For read_figters() from txt file
 
-def fighter_from_str(line: str, start_rating: int = 0) -> Fighter:
-    """
-    String format:
-    NAME,<HP>,<Opponent:NumOfFights>
-    :return:
-    """
-    split = line.split(',')
-    # This is a very unsafe function, but will do if we only read the properly formatted data
-    name = split[0].rstrip()
-    f = Fighter(name)
-    if len(split) > 1:
-        f.rating = int(split[1].rstrip())
-    else:
-        f.rating = start_rating
-    for cell in split[2:]:
-        opp = cell.rstrip().split(':')
-        f.enemies[opp[0]] = int(opp[1])
-    return f
+        String format:
+        NAME, <initial rating>
+        :return:
+        """
+        split = line.split(',')
+        # This is a very unsafe function, but will do if we only read the properly formatted data
+        name = split[0].rstrip()
 
+        # A temporary solution for current functionality
+        f = Fighter(name, first_name='', last_name=name)
+        if len(split) > 1:
+            f.rating = int(split[1].rstrip())
+        else:
+            f.rating = start_rating
 
-def get_rating(fighter: Fighter) -> int:
-    # Function to sort fighters
-    return fighter.rating
+        return f
