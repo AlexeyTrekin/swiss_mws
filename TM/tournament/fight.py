@@ -145,3 +145,10 @@ class Fight:
         res['warnings_2'] = self.warnings_2
 
         return res
+
+    def repeats(self, other):
+        if self.fighter_1 == other.fighter1 and self.fighter_2 == other.fighter2 \
+             or self.fighter_1 == other.fighter2 and self.fighter_2 == other.fighter1:
+            return True
+        else:
+            return False

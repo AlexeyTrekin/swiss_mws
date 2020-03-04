@@ -1,4 +1,6 @@
 from pathlib import Path
+from TM.api.api import Api
+
 
 def decorate(filename):
     """
@@ -18,9 +20,11 @@ def decorate(filename):
     else:
         return filename
 
-class CsvApi:
+
+class CsvApi(Api):
 
     def __init__(self, folder, prefix, decorate=False):
+        Api.__init__(self)
         self.decorate = decorate
         self.path = Path(folder)
         self.prefix = prefix

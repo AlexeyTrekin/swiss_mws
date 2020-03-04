@@ -1,10 +1,9 @@
 import sys
 
 from TM.tournament import Tournament, Fighter
-from TM.api.csv_api import CsvApi
-from TM.api.google_api import GoogleAPI
-import config
+from TM.api import CsvApi, HttpApi, GoogleAPI
 from TM.pairings import swiss_pairings, round_pairings
+import config
 
 
 def fighter_from_str(line: str, start_rating: int = 0):
@@ -48,7 +47,7 @@ def set_round(t, apis, round_num):
         print("New pairs calculated, saved to file " + filename)
         # os.system('libreoffice ' + filename + '_pairs.csv')
     except Exception as e:
-        print("Failed to write to file")
+        print("Failed to write to file \n" + str(e))
 
 
 def set_final(finalists, candidates, api):
@@ -95,13 +94,16 @@ def main():
     # API setup
 
     if config.main_api == 'google':
-        api_1 = GoogleAPI(config.google_doc, config.num_areas,
-                          "MwSabres", collaborators=config.collaborators)
+        api_1 = GoogleAPI(config.google_doc, 2,
+                           "MwSB", collaborators=config.collaborators)
         api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
     else:
-        api_2 = GoogleAPI(config.google_doc, config.num_areas,
-                          "MwSabres", collaborators=config.collaborators)
+        api_2 = GoogleAPI(config.google_doc, 2,
+                           "MwSB", collaborators=config.collaborators)
         api_1 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
+
+    #api_1 = HttpApi(num_areas=config.num_areas)
+    #api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
 
     round_num = 0
     print("Tournament ready")
