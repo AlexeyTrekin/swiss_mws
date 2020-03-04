@@ -1,5 +1,4 @@
 from enum import Enum
-from .fighter import Fighter
 from typing import List
 
 
@@ -10,6 +9,7 @@ class FightStatus(Enum):
     going = 'going'
     paused = 'paused'
     finished = 'finished'
+    canceled = 'canceled'
 
     # Here are the result statuses as well. Maybe enumerate them separately
     win = 'win'
@@ -47,12 +47,19 @@ class Round:
 
 class Fight:
 
-    def __init__(self, fighter_1: Fighter, fighter_2: Fighter,
+    def __init__(self, fighter_1: str, fighter_2: str,
                  status=FightStatus.planned,
-                 rounds_num: int = 1, current_round: int = 0, rounds: List[Round] = None):
+                 rounds_num: int = 1, current_round: int = 0, rounds: List[Round] = None,
+                 rating_score_1: int = 0, rating_score_2: int = 0):
 
+        # fighters' IDs
         self.fighter_1 = fighter_1
         self.fighter_2 = fighter_2
+        # rating score, not the same as sum of rounds score
+        # it is not a property, because depends on the tournament rules, and we do not know yet what they could be
+        self.rating_score_1 = rating_score_1
+        self.rating_score_2 = rating_score_2
+
         self.status = status if isinstance(status, FightStatus) else FightStatus(status)
         self.rounds_num = rounds_num
         self.current_round = current_round
@@ -99,7 +106,7 @@ class Fight:
 
     @property
     def round_score_1(self):
-        # Not sure if it is okay to deduce it from the rounds, or should we have it explicitely
+        # Not sure if it is okay to deduce it from the rounds, or should we have it explicitly
         round_score_1 = 0
         for r in self.rounds:
             if r.status == FightStatus.finished and r.result_1 == FightStatus.win:
@@ -132,8 +139,6 @@ class Fight:
         """
         res = dict(self.__dict__)
         res['rounds'] = [r.to_dict for r in self.rounds]
-        res['fighter_1'] = self.fighter_1.to_dict
-        res['fighter_2'] = self.fighter_2.to_dict
         res['status'] = self.status.value
         res['doubles'] = self.doubles
         res['warnings_1'] = self.warnings_1

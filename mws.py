@@ -1,10 +1,32 @@
 import sys
 
-from TM.tournament import Tournament
+from TM.tournament import Tournament, Fighter
 from TM.api.csv_api import CsvApi
 from TM.api.google_api import GoogleAPI
 import config
 from TM.pairings import swiss_pairings, round_pairings
+
+
+def fighter_from_str(line: str, start_rating: int = 0):
+    """
+    Legacy. For read_figters() from txt file
+
+    String format:
+    NAME, <initial rating>
+    :return:
+    """
+    split = line.split(',')
+    # This is a very unsafe function, but will do if we only read the properly formatted data
+    name = split[0].rstrip()
+
+    # A temporary solution for current functionality
+    f = Fighter(name, first_name='', last_name=name)
+    if len(split) > 1:
+        f.rating = int(split[1].rstrip())
+    else:
+        f.rating = start_rating
+
+    return f
 
 
 def update(t, api, round_num):
@@ -18,6 +40,7 @@ def set_round(t, apis, round_num):
     # Automatic file name
     t.make_pairs()
     try:
+        filename = ''
         for api in apis:
             filename = t.write_pairs(api, round_num)
         # t.pairs_to_csv(filename + '_pairs.csv')
@@ -33,8 +56,10 @@ def set_final(finalists, candidates, api):
 
 
 def start(fighters_file, pairing_function=swiss_pairings):
-    t = Tournament(pairing_function=pairing_function, start_rating=config.hp, fight_cap=config.cap)
-    t.read_fighters(fighters_file, shuffle=config.random_pairs)
+
+    with open(fighters_file) as src:
+        fighters = [fighter_from_str(line, config.hp) for line in src.readlines()]
+    t = Tournament(pairing_function=pairing_function, fighters=fighters, start_rating=config.hp, fight_cap=config.cap)
     return t
 
 

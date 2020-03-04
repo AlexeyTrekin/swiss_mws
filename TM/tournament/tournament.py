@@ -1,18 +1,30 @@
 import random
 from .fighter import Fighter
+from .fight import Fight, Round, FightStatus
 from typing import Tuple, List
 
 
-def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
+def fight(fighter_1: Fighter, fighter_2: Fighter, result: Tuple[int, int]):
     """
     To put a record of a fight to the data
-    :param f1:
-    :param f2:
+    It is a legacy function that is used with the
+    :param fighter_1:
+    :param fighter_2:
     :param result:
     :return:
     """
-    f1.fight(f2, result[0])
-    f2.fight(f1, result[1])
+    # a proxy fight from the given results. In the future, the fight will come as a dict from the API
+    r = Round(status=FightStatus.finished, score_1=result[0], score_2=result[1])
+    f = Fight(fighter_1.fighter_id, fighter_2.fighter_id, status=FightStatus.finished, rounds=[r])
+
+    # here we insert the tournament rules that state that the rating score is the total score.
+    # we need this to be a slot for a function that returns rating delta from the Fight
+    # TODO: move this out of tournament class and insert this functinonality either in executable or from config
+    f.rating_score_1 = f.total_score_1
+    f.rating_score_2 = f.total_score_2
+
+    fighter_1.add_fight(f)
+    fighter_2.add_fight(f)
 
 
 class Tournament:
@@ -31,6 +43,7 @@ class Tournament:
         self.pairing_function = pairing_function
 
     def make_pairs(self):
+        # TODO: maker the pairings use the Fights
         self.pairings = self.pairing_function(self.fighters)
 
     def list_fighters(self):
@@ -40,6 +53,7 @@ class Tournament:
         return sorted(self.fighters, key=lambda f: f.rating, reverse=True)
 
     def update_fighters(self, name1: str, name2: str, score: Tuple[int, int]):
+        # TODO: change score to Fight
         """
         :param name1: unique name of the first fighter
         :param name2: unique name of the second fighter
@@ -59,27 +73,26 @@ class Tournament:
         fight(f1, f2, score)
 
     def parse_result(self, result):
+        #  This is a MWS tournament legacy.
+        #  It will be deprecated and functionality will be moved to the inherited class MWS_tournament, if needed
         """
 
         :param result:
         :return:
         """
         try:
-            sc1 = int(result[0][1])
-            sc2 = int(result[1][1])
+            # results must be negative regardless of input. We know that there is no positive score in MWS,
+            # so we make the operators work easier with this hack. They can either put or miss '-' sign without problems
+            sc1 = -abs(int(result[0][1]))
+            sc2 = -abs(int(result[1][1]))
         except ValueError as e:
             print("Results of the fight must be integer!")
             raise e
         except IndexError as e:
             print("Results of the fight must be ((name1, res1),(name2, res2))!")
             raise e
-
-            # Convert score to positive, because we only substract points in fights
-        if sc1 < 0:
-            sc1 *= -1
-        if sc2 < 0:
-            sc2 *= -1
-        if sc1 > self.fightCap or sc2 > self.fightCap:
+        # FightCap is positive, because reasons/
+        if abs(sc1) > self.fightCap or abs(sc2) > self.fightCap:
             raise ValueError("Results must be not greater than {}".format(self.fightCap))
 
         return result[0][0], result[1][0], (sc1, sc2)
@@ -124,6 +137,7 @@ class Tournament:
             self.update_fighters(*res)
 
     def remove(self, v=True):
+        # TODO: maybe change to something more general? Or leave it to the Pairings?
         """
         moves the fighters with negative score out of the list
         One lucky can stand if there is need for the additional fighter to complete the even number

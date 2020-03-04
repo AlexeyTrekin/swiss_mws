@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Optional, List
+from collections import defaultdict
 
+from .fight import Fight, Round
 
 class Division(Enum):
     base = 'base'
@@ -13,7 +15,7 @@ class Fighter:
     def __init__(self, fighter_id: str, first_name: str, last_name: str,
                  club: str = '', city: str = '', country: str = '',
                  rating: int = 0, global_rating: int = 0, division: Division = Division.base,
-                 warnings: int = 0, doubles: int = 0, fights: Optional[List] = None):
+                 warnings: int = 0, doubles: int = 0, fights: Optional[List[Fight]] = None):
         """
 
         :param fighter_id: UNIQUE fighter identifier
@@ -41,11 +43,27 @@ class Fighter:
         self.division = division if isinstance(division, Division) else Division(division)
         self.warnings = warnings
         self.doubles = doubles
+
         if fights is None:
             self.fights = []
         else:
             self.fights = fights
-        self.enemies = {}
+
+    @property
+    def enemies(self):
+        """
+        The property (Legacy) that reports which fighters have this one had fights with
+        :return:
+        dict: key=fighter_id, value = number of fights between them
+        """
+        enemies = defaultdict(int)
+        for f in self.fights:
+            # Should we add correctness check? Probably no, as the function may be deprecated soon
+            if f.fighter_1 != self.fighter_id:
+                enemies[f.fighter_1] += 1
+            else:
+                enemies[f.fighter_2] += 1
+        return enemies
 
     @property
     def name(self):
@@ -72,18 +90,21 @@ class Fighter:
         """
         return [self.name, str(self.rating), '']
 
-    def fight(self, other, hp_lost):
+    def add_fight(self, fight):
         """
-        Legacy - for current tournament's fight()
+        Legacy - for current tournament's fight().
+        It constructs a new one-Round Fight object
         :param other:
         :param hp_lost:
         :return:
         """
-        if other.name in self.enemies.keys():
-            self.enemies[other.name] += 1
+        if fight.fighter_1 == self.fighter_id:
+            self.rating += fight.rating_score_1
+        elif fight.fighter_2 == self.fighter_id:
+            self.rating += fight.rating_score_2
         else:
-            self.enemies[other.name] = 1
-        self.rating -= hp_lost
+            raise ValueError(f'Fighter {self.fighter_id} is not in the fight that is added')
+        self.fights.append(fight)
 
     def played(self, other):
         """
@@ -123,26 +144,3 @@ class Fighter:
         print(self.name + " played with all at least {} times".format(m))
         for o in others:
             self.enemies[o.name] -= m
-
-    @classmethod
-    def from_str(cls, line: str, start_rating: int = 0):
-
-        """
-        Legacy. For read_figters() from txt file
-
-        String format:
-        NAME, <initial rating>
-        :return:
-        """
-        split = line.split(',')
-        # This is a very unsafe function, but will do if we only read the properly formatted data
-        name = split[0].rstrip()
-
-        # A temporary solution for current functionality
-        f = Fighter(name, first_name='', last_name=name)
-        if len(split) > 1:
-            f.rating = int(split[1].rstrip())
-        else:
-            f.rating = start_rating
-
-        return f
