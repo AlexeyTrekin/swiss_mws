@@ -96,11 +96,11 @@ def main():
     if config.main_api == 'google':
         api_1 = GoogleAPI(config.google_doc, 2,
                            "MwSB", collaborators=config.collaborators)
-        api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
+        api_2 = CsvApi(config.csv_folder, config.csv_name)
     else:
         api_2 = GoogleAPI(config.google_doc, 2,
                            "MwSB", collaborators=config.collaborators)
-        api_1 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
+        api_1 = CsvApi(config.csv_folder, config.csv_name)
 
     #api_1 = HttpApi(num_areas=config.num_areas)
     #api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)

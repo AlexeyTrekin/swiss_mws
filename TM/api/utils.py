@@ -1,11 +1,14 @@
 import numpy as np
+from typing import List
+from TM.tournament import Fighter, Fight
+
 
 def split_to_areas(num_pairs, num_areas):
     """
     Evenly splits pairs for the areas.
-    :param pairs_num:
-    :param areas_num:
-    :return:
+    :param pairs_num: number of fights to be distributed between the areas
+    :param areas_num: number of fencing areas
+    :return: list of tuples (begin, end) - range of pairs for each area
     """
     if num_areas > num_pairs or num_areas <= 0:
         raise ValueError("Incorrect number of areas {} or pairs {}".format(num_areas, num_pairs))

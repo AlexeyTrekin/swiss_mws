@@ -1,11 +1,15 @@
-from flask import Flask, jsonify, request
-from random import choice
-import string
-from TM.api.api import Api
-from TM.tournament.fight import Fight
-from TM.api.utils import split_to_areas
 
+import string
 import threading
+
+from random import choice
+from flask import Flask, jsonify, request
+
+from TM.tournament.fight import Fight
+from .api import Api
+from .utils import split_to_areas
+
+
 
 def generate_tokens(num_areas: int, length: int=10):
     letters = string.ascii_lowercase
@@ -128,10 +132,7 @@ class HttpApi:
 
         self.round_num = round_num
         return self.host + '/' + self.port
-
-
         # Prepare responses and wait for requests
-
 
     def read(self, round_num):
         if self.check_results():

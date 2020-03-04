@@ -1,30 +1,23 @@
 import random
 from .fighter import Fighter
-from .fight import Fight, Round, FightStatus
-from typing import Tuple, List
+from .fight import Fight
+from typing import List
 
 
-def fight(fighter_1: Fighter, fighter_2: Fighter, result: Tuple[int, int]):
+def find_fighters(pair: Fight, fighters: List[Fighter]):
     """
-    To put a record of a fight to the data
-    It is a legacy function that is used with the
-    :param fighter_1:
-    :param fighter_2:
-    :param result:
+    Find the fighters in the list corresponding to the Fight
+    :param pair:
+    :param fighters:
     :return:
     """
-    # a proxy fight from the given results. In the future, the fight will come as a dict from the API
-    r = Round(status=FightStatus.finished, score_1=result[0], score_2=result[1])
-    f = Fight(fighter_1.fighter_id, fighter_2.fighter_id, status=FightStatus.finished, rounds=[r])
-
-    # here we insert the tournament rules that state that the rating score is the total score.
-    # we need this to be a slot for a function that returns rating delta from the Fight
-    # TODO: move this out of tournament class and insert this functinonality either in executable or from config
-    f.rating_score_1 = f.total_score_1
-    f.rating_score_2 = f.total_score_2
-
-    fighter_1.add_fight(f)
-    fighter_2.add_fight(f)
+    res = [None, None]
+    for f in fighters:
+        if f.fighter_id == pair.fighter_1:
+            res[0] = f
+        elif f.fighter_id == pair.fighter_2:
+           res[1] = f
+    return res
 
 
 class Tournament:
@@ -52,56 +45,14 @@ class Tournament:
         """
         return sorted(self.fighters, key=lambda f: f.rating, reverse=True)
 
-    def update_fighters(self, name1: str, name2: str, score: Tuple[int, int]):
-        # TODO: change score to Fight
-        """
-        :param name1: unique name of the first fighter
-        :param name2: unique name of the second fighter
-        :param score: difference in score. If negative, HP will diminish, if positive - increase.
-        :return:
-        """
-        f1 = None
-        f2 = None
-
-        for f in self.fighters:
-            if f.name == name1:
-                f1 = f
-            elif f.name == name2:
-                f2 = f
-        if f1 is None or f2 is None:
-            raise ValueError("One of the fighters named {}, {} not found".format(name1, name2))
-        fight(f1, f2, score)
-
-    def parse_result(self, result):
-        #  This is a MWS tournament legacy.
-        #  It will be deprecated and functionality will be moved to the inherited class MWS_tournament, if needed
-        """
-
-        :param result:
-        :return:
-        """
-        try:
-            # results must be negative regardless of input. We know that there is no positive score in MWS,
-            # so we make the operators work easier with this hack. They can either put or miss '-' sign without problems
-            sc1 = -abs(int(result[0][1]))
-            sc2 = -abs(int(result[1][1]))
-        except ValueError as e:
-            print("Results of the fight must be integer!")
-            raise e
-        except IndexError as e:
-            print("Results of the fight must be ((name1, res1),(name2, res2))!")
-            raise e
-        # FightCap is positive, because reasons/
-        if abs(sc1) > self.fightCap or abs(sc2) > self.fightCap:
-            raise ValueError("Results must be not greater than {}".format(self.fightCap))
-
-        return result[0][0], result[1][0], (sc1, sc2)
+    def update_fighters(self, fight: Fight):
+        for fighter in find_fighters(fight, self.fighters):
+            print(fighter)
+            fighter.add_fight(fight)
+            print(fighter)
 
     def read_fighters(self, filename: str, shuffle=False):
-        with open(filename) as src:
-            self.fighters = [Fighter.from_str(s, self.startRating) for s in src.readlines()]
-            if shuffle:
-                random.shuffle(self.fighters)
+        raise NotImplementedError
 
     def write_standings(self, api, round_num):
         """
@@ -110,7 +61,7 @@ class Tournament:
         :param round_num: Number of the round to which we should write the standings
         :return:
         """
-        api.write(self.fighters, round_num)
+        raise NotImplementedError
 
     def write_pairs(self, api, round_num):
         """
@@ -119,7 +70,12 @@ class Tournament:
         :param round_num: Number of the round to which we should write the pairings
         :return:
         """
-        return api.write(self.pairings, round_num)
+        # TODO: move Fight() construction to pairings
+        fights = [Fight(pair[0].fighter_id, pair[1].fighter_id) for pair in self.pairings]
+        fighters_dict = {}
+        for f in self.fighters:
+            fighters_dict[f.fighter_id] = f
+        return api.write(fights, fighters_dict, round_num)
 
     def read_results(self, api, round_num):
         """
@@ -129,12 +85,10 @@ class Tournament:
         :return: list of fight results to apply to the fighters.
         Format: tuple of tuples ((fighter1, result1), (figther2, result2)), each is a string
         """
-
         # we parse and check the results before the tournament update in order to maintain sort of consistency
-        data = api.read(round_num)
-        results = [self.parse_result(res) for res in data]
-        for res in results:
-            self.update_fighters(*res)
+        fights = api.read(round_num)
+        for fight in fights:
+            self.update_fighters(fight)
 
     def remove(self, v=True):
         # TODO: maybe change to something more general? Or leave it to the Pairings?
