@@ -126,16 +126,16 @@ def get_data_request(sheet_id):
 
 def get_create_sheet_request(sheet_id):
     request = [{'addSheet':
-                   {'properties': {
-                         "sheetId": sheet_id,
-                         "title": 'Round_{}'.format(sheet_id+1),
+                    {'properties': {
+                          "sheetId": sheet_id,
+                          "title": 'Round_{}'.format(sheet_id+1),
                           "gridProperties": {
                               "rowCount": ROWS,
                               "columnCount": COLS
                           },
                        }
-                   }
-               }]
+                    }
+                }]
     return request
 
 

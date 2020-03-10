@@ -115,6 +115,7 @@ class GoogleAPI(Api):
         drive_service = apiclient.discovery.build('drive', 'v3', http=httpAuth)
         for email in collaborators:
             time.sleep(2)
+            # This request requires time delay to be accepted by google
             drive_service.permissions().create(
                 fileId=self._spreadsheet_id,
                 body={'type': 'user', 'role': 'writer', 'emailAddress': email},
