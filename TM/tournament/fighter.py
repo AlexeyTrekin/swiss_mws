@@ -4,7 +4,11 @@ from collections import defaultdict
 
 from .fight import Fight, Round
 
+
 class Division(Enum):
+    """
+    Rating divisions of the FDF
+    """
     base = 'base'
     pl = 'pl'
     tc = 'tc'
@@ -49,6 +53,17 @@ class Fighter:
         else:
             self.fights = fights
 
+    def __eq__(self, other):
+        """
+        The fighters are compared by ID only
+        :param other:
+        :return:
+        """
+        if self.fighter_id == other.fighter_id:
+            return True
+        else:
+            return False
+
     @property
     def enemies(self):
         """
@@ -90,12 +105,11 @@ class Fighter:
         """
         return [self.name, str(self.rating), '']
 
-    def add_fight(self, fight):
+    def add_fight(self, fight: Fight):
         """
-        Legacy - for current tournament's fight().
-        It constructs a new one-Round Fight object
-        :param other:
-        :param hp_lost:
+        When the fight is conducted, we add it to the Fighters to store it.
+
+        :param fight: a Fight object to be added to this Fighter statistics
         :return:
         """
         if fight.fighter_1 == self.fighter_id:
