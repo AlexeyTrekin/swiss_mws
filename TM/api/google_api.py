@@ -2,7 +2,13 @@ import time
 import httplib2
 import apiclient.discovery
 from oauth2client.service_account import ServiceAccountCredentials as SAC
-from TM.api.google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
+
+from .api import Api
+from .utils import split_to_areas
+from TM.tournament import Fight, Fighter, Round
+
+from .google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
+
 CREDENTIALS_FILE = 'google_token.json'
 
 
@@ -31,9 +37,10 @@ def create_new_doc(name, rows=1000, columns=25):
     return spreadsheet['spreadsheetId']
 
 
-class GoogleAPI:
+class GoogleAPI(Api):
     def __init__(self, spreadsheet_id=None, num_areas=2,
                  name="", collaborators=None, **kwargs):
+        Api.__init__(self)
         self.num_areas = num_areas
         if spreadsheet_id is not None:
             self._spreadsheet_id = spreadsheet_id
@@ -52,20 +59,34 @@ class GoogleAPI:
     def SpreadsheetURL(self):
         return 'https://docs.google.com/spreadsheets/d/{}/edit#gid=0'.format(self._spreadsheet_id)
 
-    def write(self, pairs, round_num):
+    @staticmethod
+    def parse_results(response):
+        """
+        The result parsing depends on the tournament, so here we use the MWS rules where all points are negative
+        :param response:
+        :return:
+        """
+
+        fighter_1 = response[0].rstrip().strip('\"')
+        result_1 = -abs(int(response[2].rstrip().strip('\"')))
+        fighter_2 = response[5].rstrip().strip('\"')
+        result_2 = -abs(int(response[3].rstrip().strip('\"')))
+        r = Round(status='finished', score_1=result_1, score_2=result_2)
+
+        return Fight(fighter_1, fighter_2, 'finished', rounds_num=1, rounds=[r],
+                     rating_score_1=result_1, rating_score_2=result_2)
+
+    def write(self,
+              pairs,
+              fighters, round_num):
         self.add_sheet(round_num)
-        pairs_in_area = int(len(pairs)/self.num_areas)
-        # it is rounded, so the last area may get more pairs.
-        # 15 pairs, 2 areas = 7+8
-        # problem may be: 15 pairs, 4 areas: 3+3+3+6
-        # todo: fix to make pair numbers more even (not necessary for 2 areas)
-        #pairs_in_areas = [pairs_in_area]*(self.num_areas-1) + [len(pairs) - pairs_in_area*(self.num_areas-1)]
-        area_pairs = [pairs[pairs_in_area*i: pairs_in_area*(i+1)] for i in range(self.num_areas-1)]
-        area_pairs += [pairs[pairs_in_area*(self.num_areas-1):]]
+
+        area_index = split_to_areas(len(pairs), self.num_areas)
+        area_pairs = [pairs[area_index[i][0]:area_index[i][1]] for i in range(self.num_areas)]
 
         for i, area in enumerate(area_pairs):
             position = get_pair_position(round_num, i, len(area))
-            pair_data = [pair[0].to_list() + pair[1].to_list()[::-1] for pair in area]
+            pair_data = [fighters[pair.fighter_1].to_list() + fighters[pair.fighter_2].to_list()[::-1] for pair in area]
             data_request = {
                     "valueInputOption": "USER_ENTERED",
                     "data": [
@@ -85,8 +106,8 @@ class GoogleAPI:
             response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
                                                            range=read_range).execute()
             # response['values'] = [[fighter1, hp1, result1, result2, hp2, fighter2],[...]]
-            # we format it in the api standard ((fighter1, result1), (figther2, result2))
-            results = [((fight[0], fight[2]), (fight[5], fight[3])) for fight in response['values']]
+            # we format it in the api standard Fight()
+            results = [self.parse_results(fight) for fight in response['values']]
             data += results
         return data
 
@@ -94,6 +115,7 @@ class GoogleAPI:
         drive_service = apiclient.discovery.build('drive', 'v3', http=httpAuth)
         for email in collaborators:
             time.sleep(2)
+            # This request requires time delay to be accepted by google
             drive_service.permissions().create(
                 fileId=self._spreadsheet_id,
                 body={'type': 'user', 'role': 'writer', 'emailAddress': email},

@@ -1,15 +1,85 @@
 import sys
+import random
 
-from TM.tournament import Tournament
-from TM.api.csv_api import CsvApi
-from TM.api.google_api import GoogleAPI
+from TM.tournament import Tournament, Fighter, TournamentRules
+from TM.api import CsvApi, HttpApi, GoogleAPI
+from TM.pairings import SwissPairings, RoundPairings
+
 import config
-from TM.pairings import swiss_pairings, round_pairings
+
+
+def remove(tournament: Tournament, v=True):
+    """
+    moves the fighters with negative score out of the list
+    One lucky can stand if there is need for the additional fighter to complete the even number
+    :return:
+    """
+    new_outs = []
+    minHP = tournament.fightCap
+
+    for f in tournament.fighters:
+        if f.rating <= 0:
+            new_outs.append(f)
+        else:
+            minHP = min(minHP, f.rating)
+
+    # If there 6 fighters or less, we can make finals:
+    if len(tournament.fighters) - len(new_outs) <= 2:
+        finalists = [f for f in tournament.fighters if f.rating > 0]
+        candidates = [f for f in tournament.fighters if f.rating <= 0]
+        if v:
+            print("We need to setup an additional round to choose finalists.",
+                  "Ready finalists are:")
+
+            print(finalists)
+            print('Candidates for additional round:')
+            print(candidates)
+        return finalists, candidates
+    elif len(tournament.fighters) - len(new_outs) <= 6:
+        finalists = [f for f in tournament.fighters if f.rating > 0]
+        if v:
+            print("We have the finalists:")
+            print(finalists)
+        return finalists, []
+
+    # We leave one lucky fighter from the list if there is uneven number left.
+    # TODO: add coefficient to determinate the lucky one.
+    elif (len(tournament.fighters) - len(new_outs)) % 2 != 0:
+        lucky = random.choice(new_outs)
+        if v:
+            print('Lucky one: {}'.format(lucky))
+        lucky.rating = minHP
+        new_outs.remove(lucky)
+
+    for f in new_outs:
+        tournament.remove_fighter(f)
+
+
+def fighter_from_str(line: str, start_rating: int = 0):
+    """
+    Legacy. For read_figters() from txt file
+
+    String format:
+    NAME, <initial rating>
+    :return:
+    """
+    split = line.split(',')
+    # This is a very unsafe function, but will do if we only read the properly formatted data
+    name = split[0].rstrip()
+
+    # A temporary solution for current functionality
+    f = Fighter(name, first_name='', last_name=name)
+    if len(split) > 1:
+        f.rating = int(split[1].rstrip())
+    else:
+        f.rating = start_rating
+
+    return f
 
 
 def update(t, api, round_num):
     t.read_results(api, round_num)
-    res = t.remove()
+    res = remove(t)
     print("Results for round {} imported\n".format(round_num))
     return res
 
@@ -18,27 +88,32 @@ def set_round(t, apis, round_num):
     # Automatic file name
     t.make_pairs()
     try:
+        filename = ''
         for api in apis:
             filename = t.write_pairs(api, round_num)
-        #t.pairs_to_csv(filename + '_pairs.csv')
-        #t.standings_to_txt(filename + '_standings.txt')
+        # t.pairs_to_csv(filename + '_pairs.csv')
+        # t.standings_to_txt(filename + '_standings.txt')
         print("New pairs calculated, saved to file " + filename)
-        # os.system('libreoffice ' + filename + '_pairs.csv')
     except Exception as e:
-        print("Failed to write to file")
+        print("Failed to write to file \n" + str(e))
 
 
 def set_final(finalists, candidates, api):
     pass
 
 
-def start(fighters_file, pairing_function=swiss_pairings):
-    t = Tournament(pairing_function=pairing_function, maxHP=config.hp, fightCap=config.cap)
-    t.read_fighters(fighters_file, shuffle=config.random_pairs)
+def start(fighters_file, pairing_function=SwissPairings()):
+
+    with open(fighters_file) as src:
+        fighters = [fighter_from_str(line, config.hp) for line in src.readlines()]
+    t = Tournament(rules=TournamentRules(pairing_function=pairing_function,
+                                         start_rating=config.hp,
+                                         fight_cap=config.cap),
+                   fighters=fighters)
     return t
 
 
-def restart(fighters_file, api, rounds_passed, pairing_function=swiss_pairings):
+def restart(fighters_file, api, rounds_passed, pairing_function=SwissPairings()):
     t = start(fighters_file, pairing_function)
     for round_num in range(rounds_passed):
         try:
@@ -63,20 +138,23 @@ def main():
 
     #Tournament setup
     if config.pairing_function == 'round':
-        pairing_function = round_pairings
+        pairing_function = RoundPairings()
     else:
-        pairing_function = swiss_pairings
+        pairing_function = SwissPairings()
     t = start(fighters_file, pairing_function)
     # API setup
 
     if config.main_api == 'google':
-        api_1 = GoogleAPI(config.google_doc, config.num_areas,
-                          "MwSabres", collaborators=config.collaborators)
-        api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
+        api_1 = GoogleAPI(config.google_doc, 2,
+                           "MwSB", collaborators=config.collaborators)
+        api_2 = CsvApi(config.csv_folder, config.csv_name)
     else:
-        api_2 = GoogleAPI(config.google_doc, config.num_areas,
-                          "MwSabres", collaborators=config.collaborators)
-        api_1 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
+        api_2 = GoogleAPI(config.google_doc, 2,
+                           "MwSB", collaborators=config.collaborators)
+        api_1 = CsvApi(config.csv_folder, config.csv_name)
+
+    #api_1 = HttpApi(num_areas=config.num_areas)
+    #api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
 
     round_num = 0
     print("Tournament ready")
@@ -129,8 +207,11 @@ def main():
                 print('The restart did not complete. '
                       'You can correct the results and restart once again')
 
+        elif split[0] == 'list':
+            print(t.list_fighters())
+
         else:
-            print('Unknown command, only round and restart <int> can be used')
+            print('Unknown command, only \'list\', \'round\' and \'restart <int>\' can be used')
 
 
 if __name__ == '__main__':

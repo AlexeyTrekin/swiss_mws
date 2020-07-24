@@ -1,15 +1,25 @@
-def dumb_round_pairings(fighters):
-    """
-    Formally, it gives every fight, but in useless order
-    :param fighters:
-    :return:
-    """
-    pairings = []
-    f_num = len(fighters)
-    for f1 in range(f_num):
-        for f2 in range(f1):
-            pairings.append((fighters[f1], fighters[f2]))
-    return pairings
+from .pairings import Pairings
+
+
+class RoundPairings(Pairings):
+    #
+    def __call__(self, fighters):
+        """
+        Make pairings for every pair in 'fighters', arranging it so that none will have 2 fights in a row
+        (except case with 3 or 4 fighters)
+        :param fighters: list of fighters
+        :return: list of Fights (tuples)
+        """
+        # Special cases
+        if len(fighters) < 2:
+            return []
+        if len(fighters) == 2:
+            return [(fighters[0], fighters[1])]
+
+        pairings = []
+        for shift in range(1, len(fighters) // 2 + 1):
+            pairings += subround(fighters, shift)
+        return pairings
 
 
 def subround_consequent(fighters):
@@ -61,20 +71,3 @@ def subround(fighters, shift):
     return pairings
 
 
-def round_pairings(fighters):
-    """
-    Make pairings for every pair in 'fighters', arranging it so that none will have 2 figts in a row
-    (except case with 3 or 4 fighters)
-    :param fighters: list of fighters
-    :return: list of pairs (tuples)
-    """
-    # Special cases
-    if len(fighters) < 2:
-        return []
-    if len(fighters) == 2:
-        return [(fighters[0], fighters[1])]
-
-    pairings = []
-    for shift in range(1, len(fighters) // 2 + 1):
-        pairings += subround(fighters, shift)
-    return pairings

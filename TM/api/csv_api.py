@@ -1,68 +1,59 @@
 from pathlib import Path
+from TM.api.api import Api
+from TM.tournament import Fight, Round
 
-def decorate(filename):
+
+class CsvApi(Api):
     """
-    We do not want to lose any of the data due to overwriting
-    :param filename:
-    :return:
+    This is an input-output to the CSV file in the local filesystem
+    By now, it is restricted to one-round fight without doubles and warnings, but can be easily extended if there is need
+
+    It is useful as a backup to store previous rounds untouched.
     """
-    if Path(filename).exists:
-        noext = filename[:filename.rfind('.')]
-        ext = filename[filename.rfind('.'):]
-        decorated = filename
-        i=1
-        while Path(decorated).exists():
-            decorated = noext + str(i) + ext
-            i += 1
-        return decorated
-    else:
-        return filename
 
-class CsvApi:
+    def __init__(self, folder, prefix):
+        """
 
-    def __init__(self, folder, prefix, decorate=False):
-        self.decorate = decorate
+        :param folder:
+        :param prefix:
+        """
+        Api.__init__(self)
         self.path = Path(folder)
         self.prefix = prefix
 
-    def write(self, pairs, round_num):
+    def write(self, pairs, fighters, round_num):
         filename = self.path/(self.prefix+str(round_num) + '.csv')
         with open(filename, 'w') as dst:
             dst.write('RED, Red HP, Red score, Blue score, Blue HP, BLUE\n')
             for p in pairs:
-                dst.write(p[0].name + ',' + str(p[0].hp) + ', , , ' + str(p[1].hp) + ',' + p[1].name + '\n')
+                dst.write(p.fighter_1 + ',' + str(fighters[p.fighter_1].rating)
+                          + ', , , '
+                          + str(fighters[p.fighter_2].rating) + ',' + p.fighter_2 + '\n')
         return str(filename)
 
+    @staticmethod
+    def parse_results(line):
+        split = line.split(',')
+        fighter_1 = split[0].rstrip().strip('\"')
+        result_1 = -abs(int(split[2].rstrip().strip('\"')))
+        fighter_2 = split[5].rstrip().strip('\"')
+        result_2 = -abs(int(split[3].rstrip().strip('\"')))
+        r = Round(status='finished', score_1=result_1, score_2=result_2)
+        return Fight(fighter_1, fighter_2, 'finished', rounds_num=1, rounds = [r],
+                     rating_score_1=r.score_1, rating_score_2=r.score_2)
+
     def read(self, round_num):
+        """
+        The reading is not connected with writing, it does not use the parameters of the written fights.
+        It allows to return any manually changed pairs with the same fighters; however it may cause any kind of problem
+        if the results are corrupted.
+        :param round_num:
+        :return:
+        """
+
         filename = self.path / (self.prefix + str(round_num) + '.csv')
         results = []
         with open(filename) as src:
-            for p in src.readlines()[1:]:
-                split = p.split(',')
-                results.append(
-                    ((split[0].rstrip().strip('\"'), int(split[2].rstrip().strip('\"'))),
-                               (split[5].rstrip().strip('\"'), int(split[3].rstrip().strip('\"'))))
-                )
+            for line in src.readlines()[1:]:
+                results.append(self.parse_results(line=line))
         return results
-
-
-"""
-    def standings_to_txt(self, filename: str):
-        with open(decorate(filename), 'w') as dst:
-            for f in self.fighters:
-                dst.write(f.to_str() + '\n')
-
-    def all_to_txt(self, filename: str):
-        with open(decorate(filename), 'w') as dst:
-            for f in self.fighters:
-                dst.write(f.to_str() + '\n')
-        for f in self.outs:
-            dst.write(f.to_str() + '\n')
-
-    def standings_to_csv(self, filename):
-
-        with open(decorate(filename), 'w') as dst:
-            for f in sorted(self.fighters, key=hp):
-                dst.write(repr(f) + '\n')
-
-"""

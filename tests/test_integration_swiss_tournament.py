@@ -1,5 +1,5 @@
 from random import randint
-from TM.tournament import Tournament, Fighter
+from TM.tournament import Tournament, Fighter, TournamentRules
 from TM.pairings import swiss_pairings, swiss_pairings_old
 
 # Tournament size varaints
@@ -38,8 +38,9 @@ class ProxyApi:
 
 
 def conduct_tournament(pairing_function, fighters_num, hp, cap):
-    fighters = [Fighter(hp=hp, name=str(i)) for i in range(fighters_num)]
-    tour = Tournament(fightCap=cap, fighters=fighters, pairing_function=pairing_function)
+    rules = TournamentRules(fight_cap=cap, pairing_function=pairing_function, start_rating=hp)
+    fighters = [Fighter(fighter_id=str(i), last_name='', first_name=str(i), rating=hp) for i in range(fighters_num)]
+    tour = Tournament(fighters=fighters, rules=rules)
     api = ProxyApi(cap=cap)
 
     r = 0
