@@ -2,6 +2,7 @@ import random
 from .fighter import Fighter, fighter_from_str
 from typing import Tuple, List
 
+
 def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     """
     To put a record of a fight to the data
@@ -13,13 +14,15 @@ def fight(f1: Fighter, f2: Fighter, result: Tuple[int, int]):
     f1.fight(f2, result[0])
     f2.fight(f1, result[1])
 
+
 def hp(fighter: Fighter) -> int:
     # Function to sort fighters
     return fighter.hp
 
+
 class Tournament:
 
-    def __init__(self, pairing_function, fighters: List[Fighter]=None, maxHP=12, fightCap=4):
+    def __init__(self, pairing_function, fighters: List[Fighter] = None, maxHP=12, fightCap=4):
 
         if fighters is not None:
             self.fighters = fighters
