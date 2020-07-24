@@ -22,7 +22,7 @@ def hp(fighter: Fighter) -> int:
 
 class Tournament:
 
-    def __init__(self, pairing_function, fighters: List[Fighter] = None, maxHP=12, fightCap=4):
+    def __init__(self, pairing_function, fighters: List[Fighter]=None, maxHP=12, fightCap=4):
 
         if fighters is not None:
             self.fighters = fighters
