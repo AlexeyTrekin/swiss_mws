@@ -126,8 +126,8 @@ class Fighter:
         :param other:
         :return:
         """
-        if other.name in self.enemies.keys():
-            return self.enemies[other.name]
+        if other.fighter_id in self.enemies.keys():
+            return self.enemies[other.fighter_id]
         else:
             return 0
 

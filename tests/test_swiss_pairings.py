@@ -1,33 +1,34 @@
 import pytest
 from random import randint
-from TM.pairings import swiss_pairings
+from TM.pairings import SwissPairings
 from TM.tournament import Fighter
 
-MAX_FIGHTERS = 100
+MAX_FIGHTERS = 20
 MAX_HP = 20
+
 
 class ProxyFighter:
     """
     mocks the basic functionality needed for the fighter class: has name, list of matches, and can be matched with other
     """
-    def __init__(self, name, rating=12, enemies=None):
-        self.name = name
-        self.hp = rating
-        if enemies is None:
-            self.enemies = []
+    def __init__(self, fighter_id: str, rating: int = 0,  fights=None):
+        self.fighter_id = fighter_id
+        self.rating = rating
+        if fights is None:
+            self.fights = []
         else:
-            self.enemies = enemies
+            self.fights = fights
 
     def played(self, other):
-        if other.name in self.enemies:
-            return True
+        """
+        Legacy. Will be replaced by self.fights and its queries
+        :param other:
+        :return:
+        """
+        if other.fighter_id in self.fights:
+            return 1
         else:
-            return False
-
-    def match(self, other, score=0):
-        self.enemies.append(other.name)
-        self.hp += score
-
+            return 0
 
 
 def generate_data_all():
@@ -38,7 +39,7 @@ def generate_data_all():
     """
     data = []
     # Just a blank tournament
-    data.append([ProxyFighter(name=str(i+1)) for i in range(12)])
+    data.append([ProxyFighter(fighter_id=str(i+1)) for i in range(12)])
     # This case emerged from our first tournament and revealed that the current method is flawed,
 
     # As it paired Ryabov with Volodkov again
@@ -58,7 +59,7 @@ def generate_data_all():
                  ProxyFighter('Ryabov', 6, ['Nekrylov', 'Volodkov'])])
 
     # Big tournament to test time and memory
-    data.append([ProxyFighter(name=str(i+1), rating=randint(1, MAX_HP)) for i in range(MAX_FIGHTERS)])
+    data.append([ProxyFighter(fighter_id=str(i+1), rating=randint(1, MAX_HP)) for i in range(MAX_FIGHTERS)])
 
     # Add more data samples
     return data
@@ -69,26 +70,26 @@ class TestSwissPairings:
     # Test normal behavior
     def test_num_fights_in_a_round(self):
         for fighters in generate_data_all():
-            pairings = swiss_pairings(fighters)
+            pairings = SwissPairings()(fighters)
             assert len(pairings) == len(fighters)/2
 
     def test_one_fight_for_fighter_in_a_round(self):
         for fighters in generate_data_all():
-            pairings = swiss_pairings(fighters)
+            pairings = SwissPairings()(fighters)
             fights = {}
             for i in range(len(pairings)):
                 if pairings[i][0] not in fights.keys():
-                    fights[pairings[i][0].name] = 1
+                    fights[pairings[i][0].fighter_id] = 1
                 else:
-                    fights[pairings[i][0].name] += 1
+                    fights[pairings[i][0].fighter_id] += 1
 
                 if pairings[i][1] not in fights.keys():
-                    fights[pairings[i][1].name] = 1
+                    fights[pairings[i][1].fighter_id] = 1
                 else:
-                    fights[pairings[i][1].name] += 1
+                    fights[pairings[i][1].fighter_id] += 1
 
             # Fighters list is the same
-            assert sorted([f.name for f in fighters]) == sorted(list(fights.keys()))
+            assert sorted([f.fighter_id for f in fighters]) == sorted(list(fights.keys()))
 
             # Every one gets one fight
             for f, f_num in fights.items():
@@ -96,20 +97,20 @@ class TestSwissPairings:
 
     def test_no_self_fight(self):
         for fighters in generate_data_all():
-            pairings = swiss_pairings(fighters)
+            pairings = SwissPairings()(fighters)
             for p in pairings:
                 assert p[0] != p[1]
 
     def test_no_repeated_fight(self):
         for fighters in generate_data_all():
-            pairings = swiss_pairings(fighters)
+            pairings = SwissPairings()(fighters)
             for p in pairings:
-                assert p[1].name not in p[0].enemies
-                assert p[0].name not in p[1].enemies
+                assert p[1].fighter_id not in p[0].fights
+                assert p[0].fighter_id not in p[1].fights
 
     # test special cases
     def test_error_on_odd_number(self):
-        fighters = [Fighter(name=str(i + 1)) for i in range(11)]
+        fighters = [Fighter(fighter_id=f'{i}', first_name=f'Name{i}', last_name=f'Surname{i}') for i in range(11)]
         with pytest.raises(ValueError):
-            swiss_pairings(fighters)
+            SwissPairings()(fighters)
 

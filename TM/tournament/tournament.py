@@ -32,7 +32,7 @@ class TournamentRules:
 
     def __init__(self, pairing_function, sorting_function=None,
                  start_rating=0,
-                 fight_cap=None, excess_cap = None,
+                 fight_cap=None, excess_cap=None,
                  warnings_per_fight=None, warnings_total=None, doubles_cap=None,
                  time=None, last_exchange_time=None, last_exchange_start=None, sudden_death_time=None,
                  rounds_num=1, preserve_score=False):
@@ -105,7 +105,7 @@ class Tournament:
         """
         Adds a fighter to the current tournament. For now we do not check if this tournament will be valid after the addition.
         It can be ruined with some collisions and so on, so this function should be used with caution.
-        Maybe, later we should implement the check if the tournament allows the fihgter addition\deletion
+        Maybe, later we should implement the check if the tournament allows the fihgter addition/deletion
 
         If the fighter with this ID is already in the tournament, the function does nothing but raise a warning
         :param new_fighter: Fighter to be added to the tournament.
@@ -120,7 +120,7 @@ class Tournament:
         """
         Remover a fighter from the current tournament. For now we do not check if this tournament will be valid after the removal.
         It can be ruined with some collisions and so on, so this function should be used with caution.
-        Maybe, later we should implement the check if the tournament allows the fihgter addition\deletion
+        Maybe, later we should implement the check if the tournament allows the fihgter addition/deletion
 
         If the fighter with this ID is not in the tournament, the function does nothing but raise a warning
         :param fighter: Fighter to be removed to the tournament.

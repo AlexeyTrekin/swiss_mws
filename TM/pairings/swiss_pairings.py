@@ -7,7 +7,15 @@ from TM.tournament import Fighter
 
 
 class SwissPairings(Pairings):
+    """
+    Swiss tournament system that tries to avoid repeated pairings
+    The parameters make balance between speed and probability of repeat:
 
+    Args:
+        max_diff: maximum rating difference for the pair to be established. If negative, any is allowed
+        candidates_to_keep: number of candidate pairings to keep at each stage.
+            The more it is, the longer the pairing takes, but probability of good solution grows. Default is OK.
+    """
     def __init__(self, max_diff=-1, candidates_to_keep=15):
         super().__init__()
         self.max_diff = max_diff
