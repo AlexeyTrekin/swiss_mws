@@ -122,12 +122,11 @@ class GoogleAPI(Api):
                 continue
             time.sleep(2)
             # This request requires time delay to be accepted by google
-            if email not in drive_service.permissions().list():
-                drive_service.permissions().create(
+            drive_service.permissions().create(
                     fileId=self._spreadsheet_id,
                     body={'type': 'user', 'role': 'writer', 'emailAddress': email},
                     fields='id'
-                ).execute()
+            ).execute()
 
     def fill_heading(self, sheet_id):
         request = get_format_request(sheet_id)
