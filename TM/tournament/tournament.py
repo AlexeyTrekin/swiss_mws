@@ -3,7 +3,7 @@ import warnings
 
 from typing import List, Tuple
 from .fighter import Fighter
-from .fight import Fight
+from .fight import Fight, FightStatus
 
 
 def find_fighters(pair: Fight, fighters: List[Fighter]):
@@ -30,9 +30,10 @@ class TournamentRules:
 
     """
 
-    def __init__(self, pairing_function, sorting_function=None,
+    def __init__(self, pairing_function, sorting_function=None, rating_fn=None,
                  start_rating=0,
-                 fight_cap=None, excess_cap=None,
+                 max_rating=None, min_rating=None,
+                 round_excess_cap=None, round_points_cap=None,
                  warnings_per_fight=None, warnings_total=None, doubles_cap=None,
                  time=None, last_exchange_time=None, last_exchange_start=None, sudden_death_time=None,
                  rounds_num=1, preserve_score=False):
@@ -42,13 +43,20 @@ class TournamentRules:
         # It is not used in pairings (where rating is enough) but can be used for the final rankings,
         # and take into account additional coefficients
         self.sorting_fn = sorting_function
-
+        # a function that calculates rating score from the fight rounds
+        self.rating_fn = rating_fn
         # Rating with which a fighter starts. Is zero in most cases
         self.start_rating = start_rating
-        # max points per fight
-        self.fight_cap = fight_cap
+        # max rating points per fight
+        self.max_rating = max_rating
+        # min rating point per fight
+        self.min_rating = min_rating
+
         # max points difference, which stops the round
-        self.excess_cap = excess_cap
+        self.round_excess_cap = round_excess_cap
+        # max points per round
+        self.round_points_cap=round_points_cap
+
         self.rounds_num = rounds_num
         #Maximum doubles, which stops the fight
         self.doubles_cap = doubles_cap
@@ -178,6 +186,53 @@ class Tournament:
                   rounds_num=self.rules.rounds_num)
         return f
 
+    def check_fight(self, fight: Fight):
+        """
+        Checks if the fight complies to the current tournament rules and can be applied
+        :param fight:
+        :return:
+        """
+        # we do not apply unfinished fights, yes?
+        if fight.status != FightStatus.finished:
+            return False
+
+        # We need the rating score, and will calculate it if the rules allow us to:
+        if self.rules.rating_fn is not None:
+            fight.count_rating_points(self.rules.rating_fn)
+
+        # rounds num
+        if len(fight.rounds) > self.rules.rounds_num:
+            return False
+
+        # rating points cap
+        if self.rules.max_rating \
+                and (fight.rating_score_1 > self.rules.max_rating or fight.rating_score_2 > self.rules.max_rating):
+            return False
+        if self.rules.min_rating \
+                and (fight.rating_score_1 < self.rules.min_rating or fight.rating_score_2 < self.rules.min_rating):
+            return False
+
+        # points and excess cap in a round - not present in rules yet
+        for r in fight.rounds:
+            if self.rules.round_points_cap \
+                    and (r.score_1 > self.rules.round_points_cap or r.score_2 > self.rules.round_points_cap):
+                return False
+            if self.rules.round_excess_cap \
+                    and abs(r.score_1 - r.score_2) > self.rules.round_excess_cap:
+                return False
+
+        # doubles cap
+        if self.rules.doubles_cap \
+                and fight.doubles > self.rules.doubles_cap:
+            return False
+
+        # warnings cap
+        if self.rules.warnings_per_fight \
+                and (fight.warnings_1 > self.rules.warnings_per_fight
+                     or fight.warnings_2 > self.rules.warnings_per_fight):
+            return False
+        return True
+
     def make_pairs(self):
         """
         Invokes the pairing functions and makes new pairs.
@@ -202,7 +257,6 @@ class Tournament:
 
     def read_results(self, api, round_num):
         """
-
         :param api: API that complies with the format
         :param round_num:  Number of the round from which we should read the pairings results
         :return: list of fight results to apply to the fighters.
@@ -210,6 +264,10 @@ class Tournament:
         """
         # we parse and check the results before the tournament update in order to maintain sort of consistency
         fights = api.read(round_num)
+        for fight in fights:
+            if not self.check_fight(fight):
+                # It works now with mws.py but maybe we need a better error handling way.
+                raise ValueError(f'One of the results do not meet the tournament rules: {fight.to_dict}')
         for fight in fights:
             self.update_fighters(fight)
 
@@ -251,4 +309,4 @@ class Tournament:
 
     @property
     def fightCap(self):
-        return self.rules.fight_cap
+        return self.rules.max_rating
