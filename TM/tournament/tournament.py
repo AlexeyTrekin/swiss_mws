@@ -3,7 +3,7 @@ import warnings
 
 from typing import List, Tuple
 from .fighter import Fighter
-from .fight import Fight
+from .fight import Fight, FightStatus
 
 
 def find_fighters(pair: Fight, fighters: List[Fighter]):
@@ -178,6 +178,36 @@ class Tournament:
                   rounds_num=self.rules.rounds_num)
         return f
 
+    def check_fight(self, fight: Fight):
+        """
+        Checks if the fight complies to the current tournament rules and can be applied
+        :param fight:
+        :return:
+        """
+        # we do not apply unfinished fights, yes?
+        if fight.status != FightStatus.finished:
+            return False
+        # rounds num
+        if len(fight.rounds) > self.rules.rounds_num:
+            return False
+        # rating points cap
+        if self.rules.fight_cap \
+                and (fight.rating_score_1 > self.rules.fight_cap or fight.rating_score_2 > self.rules.fight_cap):
+            return False
+        # points cap in a round - not present in rules yet
+        #for round in fight.rounds:
+        #    if round.score_1 > self.rules.fight_cap or round.score_2 > self.rules.fight_cap:
+        #        return False
+        # doubles cap
+        if self.rules.doubles_cap \
+                and fight.doubles > self.rules.doubles_cap:
+            return False
+        # warnings cap
+        if self.rules.warnings_per_fight \
+                and (fight.warnings_1 > self.rules.warnings_per_fight
+                     or fight.warnings_2 > self.rules.warnings_per_fight):
+            return False
+
     def make_pairs(self):
         """
         Invokes the pairing functions and makes new pairs.
@@ -202,7 +232,6 @@ class Tournament:
 
     def read_results(self, api, round_num):
         """
-
         :param api: API that complies with the format
         :param round_num:  Number of the round from which we should read the pairings results
         :return: list of fight results to apply to the fighters.
@@ -210,6 +239,10 @@ class Tournament:
         """
         # we parse and check the results before the tournament update in order to maintain sort of consistency
         fights = api.read(round_num)
+        for fight in fights:
+            if not self.check_fight(fight):
+                # It works now with mws.py but maybe we need a better error handling way.
+                raise ValueError(f'One of the results do not meet the tournament rules: {fight.to_dict}')
         for fight in fights:
             self.update_fighters(fight)
 
