@@ -15,7 +15,7 @@ def remove(tournament: Tournament, v=True):
     :return:
     """
     new_outs = []
-    minHP = tournament.fightCap
+    minHP = - tournament.rules.min_rating
 
     for f in tournament.fighters:
         if f.rating <= 0:
