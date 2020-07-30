@@ -113,14 +113,21 @@ class GoogleAPI(Api):
 
     def share(self, collaborators):
         drive_service = apiclient.discovery.build('drive', 'v3', http=httpAuth)
+        # get current collaborators emails:
+        permissions = drive_service.permissions().list(fileId=self._spreadsheet_id,
+                                                       fields='permissions/emailAddress').execute()
+        current_collaborators = [perm.get('emailAddress', '').lower() for perm in permissions.get('permissions', [])]
         for email in collaborators:
+            if email.lower() in current_collaborators:
+                continue
             time.sleep(2)
             # This request requires time delay to be accepted by google
-            drive_service.permissions().create(
-                fileId=self._spreadsheet_id,
-                body={'type': 'user', 'role': 'writer', 'emailAddress': email},
-                fields='id'
-            ).execute()
+            if email not in drive_service.permissions().list():
+                drive_service.permissions().create(
+                    fileId=self._spreadsheet_id,
+                    body={'type': 'user', 'role': 'writer', 'emailAddress': email},
+                    fields='id'
+                ).execute()
 
     def fill_heading(self, sheet_id):
         request = get_format_request(sheet_id)
