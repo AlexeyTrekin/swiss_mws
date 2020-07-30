@@ -68,6 +68,16 @@ class Fight:
         else:
             self.rounds = rounds
 
+    def count_rating_points(self, rating_fn):
+        """
+        If the rating score is not returned by API, we can calculate it based on the round results
+        with arbitrary function that can be specified in tournament rules
+
+        :param rating_fn:
+        :return:
+        """
+        self.rating_score_1, self.rating_score_2 = rating_fn(self.rounds)
+
     # === Properties that wrap around the self.rounds fields  ===
     @property
     def doubles(self):

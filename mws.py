@@ -108,7 +108,8 @@ def start(fighters_file, pairing_function=SwissPairings()):
         fighters = [fighter_from_str(line, config.hp) for line in src.readlines()]
     t = Tournament(rules=TournamentRules(pairing_function=pairing_function,
                                          start_rating=config.hp,
-                                         fight_cap=config.cap),
+                                         max_rating=0,
+                                         min_rating=-abs(config.cap)),
                    fighters=fighters)
     return t
 
