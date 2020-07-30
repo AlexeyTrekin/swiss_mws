@@ -1,5 +1,5 @@
 from random import randint, choice
-from TM.tournament import Tournament, Fighter, Fight, TournamentRules
+from TM.tournament import Tournament, Fighter, Fight, FightStatus, TournamentRules
 from TM.pairings import SwissPairings
 
 # Tournament size varaints
@@ -40,6 +40,7 @@ class ProxyApi:
                 res = [res[1], res[0]]
             pair.rating_score_1 = res[0]
             pair.rating_score_2 = res[1]
+            pair.status = FightStatus.finished
             results.append(pair)
         self.all_fights.append(results)
         return results
@@ -93,7 +94,7 @@ def remove(tournament: Tournament, v=True):
 
 
 def conduct_tournament(pairing_function, fighters_num, hp, cap):
-    rules = TournamentRules(max_rating=cap, pairing_function=pairing_function, start_rating=hp)
+    rules = TournamentRules(max_rating=0, min_rating=-cap, pairing_function=pairing_function, start_rating=hp)
     fighters = [Fighter(fighter_id=str(i), last_name='', first_name=str(i), rating=hp) for i in range(fighters_num)]
     tour = Tournament(fighters=fighters, rules=rules)
     api = ProxyApi(cap=cap)
