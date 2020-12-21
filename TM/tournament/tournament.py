@@ -85,7 +85,7 @@ class Tournament:
         return result[0][0], result[1][0], (sc1, sc2)
 
     def read_fighters(self, filename: str, shuffle=False):
-        with open(filename) as src:
+        with open(filename, encoding='utf-8') as src:
             self.fighters = [fighter_from_str(s, self.startRating) for s in src.readlines()]
             if shuffle:
                 random.shuffle(self.fighters)
