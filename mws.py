@@ -104,7 +104,7 @@ def set_final(finalists, candidates, api):
 
 def start(fighters_file, pairing_function=SwissPairings()):
 
-    with open(fighters_file) as src:
+    with open(fighters_file, encoding='utf-8') as src:
         fighters = [fighter_from_str(line, config.hp) for line in src.readlines()]
     t = Tournament(rules=TournamentRules(pairing_function=pairing_function,
                                          start_rating=config.hp,
