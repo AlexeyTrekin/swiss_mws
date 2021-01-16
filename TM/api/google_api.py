@@ -38,7 +38,7 @@ def create_new_doc(name, rows=1000, columns=25):
 
 
 class GoogleAPI(Api):
-    def __init__(self, spreadsheet_id=None, num_areas=2,
+    def __init__(self, spreadsheet_id=None, num_areas=1,
                  name="", collaborators=None, **kwargs):
         Api.__init__(self)
         self.num_areas = num_areas
@@ -62,19 +62,18 @@ class GoogleAPI(Api):
     @staticmethod
     def parse_results(response):
         """
-        The result parsing depends on the tournament, so here we use the MWS rules where all points are negative
+        The result parsing depends on the tournament, so here we use standard parsing for the groupwise qualifications
         :param response:
         :return:
         """
 
         fighter_1 = response[0].rstrip().strip('\"')
-        result_1 = -abs(int(response[2].rstrip().strip('\"')))
-        fighter_2 = response[5].rstrip().strip('\"')
-        result_2 = -abs(int(response[3].rstrip().strip('\"')))
+        result_1 = (int(response[2].rstrip().strip('\"')))
+        fighter_2 = response[8].rstrip().strip('\"')
+        result_2 = (int(response[6].rstrip().strip('\"')))
         r = Round(status='finished', score_1=result_1, score_2=result_2)
 
-        return Fight(fighter_1, fighter_2, 'finished', rounds_num=1, rounds=[r],
-                     rating_score_1=result_1, rating_score_2=result_2)
+        return Fight(fighter_1, fighter_2, 'finished', rounds_num=1, rounds=[r])
 
     def write(self,
               pairs,
@@ -96,7 +95,7 @@ class GoogleAPI(Api):
                          "values": pair_data}
             ]}
             service.spreadsheets().values().batchUpdate(spreadsheetId=self._spreadsheet_id,
-                                                                  body=data_request).execute()
+                                                        body=data_request).execute()
         return self.SpreadsheetURL
 
     def read(self, round_num):

@@ -175,7 +175,7 @@ class Tournament:
         """
         raise NotImplementedError
 
-    def make_fight(self, pair:Tuple[Fighter, Fighter]) -> Fight:
+    def make_fight(self, pair: Tuple[Fighter, Fighter]) -> Fight:
         """
         Makes a default (planned) fight from a pair of the fighters in compliance with the tournament rules.
         Maybe, in the future the construction will become more complex

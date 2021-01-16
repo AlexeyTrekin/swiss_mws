@@ -8,7 +8,7 @@ collaborators = ['alexey.trekin@gmail.com']
 csv_name = 'mws'
 
 # Folder for csv files
-csv_folder = '/home/trekin/Data/test'
+csv_folder = 'D:/data/tmp'#'/home/trekin/Data/test'
 
 # main api - google or csv
 main_api = 'google'
