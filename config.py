@@ -2,13 +2,13 @@
 google_doc = '136ngQAWG20veAWGMQcrZEaTefHXQw31KBU5znvAVAM0'
 
 # list of google accounts to share the new doc with
-collaborators = ['alexey.trekin@gmail.com']
+collaborators = ['alexey.trekin@gmail.com', 'kazakovvan@gmail.com']
 
 # Base name for csv files
 csv_name = 'mws'
 
 # Folder for csv files
-csv_folder = 'D:/data/tmp'#'/home/trekin/Data/test'
+csv_folder = '/home/trekin/Data/test'
 
 # main api - google or csv
 main_api = 'google'
@@ -20,11 +20,11 @@ random_pairs = False
 num_areas = 1
 
 # default HP for a fighter
-hp = 20
+hp = 0
 
 # the cap is maximum allowed amount of points given
-cap = 6
+cap = 7
 
 #
-pairing_function = 'swiss'
-#pairing_function = 'round'
+#pairing_function = 'swiss'
+pairing_function = 'round'

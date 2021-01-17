@@ -85,7 +85,8 @@ class GoogleAPI(Api):
 
         for i, area in enumerate(area_pairs):
             position = get_pair_position(round_num, i, len(area))
-            pair_data = [fighters[pair.fighter_1].to_list() + fighters[pair.fighter_2].to_list()[::-1] for pair in area]
+
+            pair_data = [fighters[pair.fighter_1].to_list() + [''] + fighters[pair.fighter_2].to_list()[::-1] for pair in area]
             data_request = {
                     "valueInputOption": "USER_ENTERED",
                     "data": [

@@ -1,5 +1,18 @@
 from typing import List
-from TM.tournament import get_rating, Fighter
+from TM.tournament import Fighter
+from .pairings import Pairings
+
+class PlayoffPairings(Pairings):
+
+    def __call__(self, fighters):
+        """
+        Make pairings for every pair in 'fighters', arranging it so that none will have 2 fights in a row
+        (except case with 3 or 4 fighters)
+        :param fighters: list of fighters
+        :return: list of Fights (tuples)
+        """
+        # Special cases
+        return playoff_rating_pairings(fighters)
 
 
 def dumb_playoff_pairings(fighters):
@@ -40,7 +53,7 @@ def playoff_rating_pairings(fighters: List[Fighter]):
         raise ValueError('There must be even number of fighters for playoff')
 
     pairings = []
-    standings = sorted(fighters, key=get_rating, reverse=True)
+    standings = sorted(fighters, key=lambda x:x.rating, reverse=True)
 
     for i in range(fighters_num//2):
         pairings.append((standings[i], standings[fighters_num - i - 1]))

@@ -4,8 +4,9 @@ COLS = 15
 
 def get_format_request(sheet_id): #, rows=1000):
     # set column width
+    widths = {1: 150, 2:50, 3:50, 4:35, 5:60, 6:35, 7:50, 8:50, 9:150}
     request = []
-    for col in [2, 3, 4, 5, 6, 7, 8]:
+    for col, w in widths.items():
         request.append({
             "updateDimensionProperties": {
                 "range": {
@@ -16,11 +17,12 @@ def get_format_request(sheet_id): #, rows=1000):
                     # т.е. размер будет применён к столбцам в диапазоне [0,1), т.е. только к столбцу A
                 },
                 "properties": {
-                    "pixelSize": 35  # размер в пикселях
+                    "pixelSize": w  # размер в пикселях
                 },
                 "fields": "pixelSize"  # нужно задать только pixelSize и не трогать другие параметры столбца
             }
         })
+
     # merge cells for the header
     request += [
         {'mergeCells': {'range': {'sheetId': sheet_id,
@@ -70,12 +72,12 @@ def get_data_request(sheet_id):
     data_request = {
         "valueInputOption": "USER_ENTERED",
         "data": [
-            {"range": "Round_{}!B1:B1".format(sheet_id + 1),
+            {"range": "Group_{}!B1:B1".format(sheet_id + 1),
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
              "values": [["1 ристалище"]]},
 
-            {"range": "Round_{}!B2:J2".format(sheet_id + 1),
+            {"range": "Group_{}!B2:J2".format(sheet_id + 1),
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
              "values": [
@@ -116,4 +118,4 @@ def get_pair_position(round_number, area, pair_num):
 
 
 def get_all_range(round_number):
-    return 'Round_{}!A1:J{}'.format(round_number, ROWS)
+    return 'Group_{}!A1:J{}'.format(round_number, ROWS)
