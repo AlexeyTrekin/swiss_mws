@@ -30,10 +30,22 @@ def set_group(t, apis, group_num):
 
 
 def set_round(t, apis, round_num):
+    t.make_pairs()
+    try:
+        filename = ''
+        for api in apis:
+            filename = t.write_pairs(api, 10+round_num)
+        # t.pairs_to_csv(filename + '_pairs.csv')
+        # t.standings_to_txt(filename + '_standings.txt')
+        print("Pairs calculated, saved to file " + filename)
+    except Exception as e:
+        print("Failed to write to file \n" + str(e))
+
+    # Write the data
     pass
 
 
-def set_final(groups, api):
+def set_final(groups):
     print('Finalizing')
     all_fighters = []
     for group in groups:
@@ -58,15 +70,15 @@ def set_final(groups, api):
     else:
         raise ValueError('We need at least 4 fighters to start the playoff!')
 
-    finals = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(),
+    final = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(),
                                              start_rating=0,
                                              max_rating=10007,
                                              min_rating=-7,
                                              round_points_cap=7, rating_fn=calc_rating,
-                                             rounds_num=1,
+                                             rounds_num=3,
                                              time=90),
                        fighters=finalists)
-    return finals
+    return final
 
 
 def calc_rating(rounds: List[Round]):
@@ -75,24 +87,38 @@ def calc_rating(rounds: List[Round]):
     # Поэтому за победу даем 10000, за ничью 1000, разницу учитываем как есть
     # Порядок критериев строго соблюдается если ничьих меньше 10, а баллов меньше 1000, что всегда верно
 
-    assert len(rounds) == 1
-    rating_1 = rating_2 = 0
+    if len(rounds) == 1:
+        # Selections (1-round fight)
+        score_diff = rounds[0].score_1 - rounds[0].score_2
+        if score_diff == 0:
+            # Draw rating
+            return 1000, 1000
+        elif score_diff > 0:
+        # Win rating + score diff rating
+            rating_1 = 10000 + score_diff
+            rating_2 = 0 - score_diff
+        else: #score_diff < 0
+            rating_1 = 0 + score_diff
+            rating_2 = 10000 - score_diff
 
-    score_diff = rounds[0].score_1 - rounds[0].score_2
-    if score_diff == 0:
-        return 1000, 1000
-    elif score_diff > 0:
-    # Win rating
-        rating_1 = 10000 + score_diff
-        rating_2 = 0 - score_diff
-    else: #score_diff < 0
-        rating_1 = 0 + score_diff
-        rating_2 = 10000 - score_diff
-
+    else:
+        # Multi-round fights for finals
+        wins_1 = wins_2 = 0
+        for round in rounds:
+            if round.score_1 - round.score_2 > 0:
+                wins_1 +=1
+            elif round.score_1 - round.score_2 < 0:
+                wins_2 +=1
+        # Add 10000 to the winner's rating
+        if wins_1 > wins_2:
+            # Modify it to match snake-like playoff pairings?
+            return 10000, 0
+        else:
+            return 0, 10000
     return rating_1, rating_2
 
 
-def start(fighters_file, pairing_function=RoundPairings()):
+def tournament_from_file(fighters_file):
 
     # Groups of fighters are divided by blank lines
 
@@ -112,7 +138,7 @@ def start(fighters_file, pairing_function=RoundPairings()):
 
     tournaments = []
     for group in groups:
-        t = Tournament(rules=TournamentRules(pairing_function=pairing_function,
+        t = Tournament(rules=TournamentRules(pairing_function=RoundPairings(),
                                              start_rating=0,
                                              max_rating=10007,
                                              min_rating=-7,
@@ -124,39 +150,19 @@ def start(fighters_file, pairing_function=RoundPairings()):
     return tournaments
 
 
-def main():
-    #Input check. Too simple to use click or others
-    if len(sys.argv) < 2:
-        print('There must be parameter - filename')
-    fighters_file = sys.argv[1]
-    if len(sys.argv) >= 3 and sys.argv[2] == '-v':
-        v = True
-    else:
-        v = False
-
-    #Tournament setup
-    ts = start(fighters_file)
-
-    for group_num, t in enumerate(ts):
-        print(f'Group {group_num+1}')
-        print(t.list_fighters())
-
-    # API setup
-    if config.main_api == 'google':
-        api_1 = GoogleAPI(config.google_doc, 1,
-                           "MwSB", collaborators=config.collaborators)
-        api_2 = CsvApi(config.csv_folder, config.csv_name)
-    else:
-        api_2 = GoogleAPI(config.google_doc, 1,
-                           "MwSB", collaborators=config.collaborators)
-        api_1 = CsvApi(config.csv_folder, config.csv_name)
-
+def start(ts: List[Tournament], api):
+    """
+    Fills the table with new figthers dta
+    :param ts:
+    :param api:
+    :return:
+    """
     for group_num, t in enumerate(ts):
         print(f'Uploading group {group_num+1} pairs')
-        set_group(t, [api_2, api_1], group_num+1)
+        set_group(t, [api], group_num+1)
 
-    print("Tournament ready: group stage")
 
+def group_stage(groups, api):
     while True:
         command = input()
         split = command.split(' ')
@@ -169,27 +175,28 @@ def main():
 
         elif split[0] == 'final':
             try:
-                for group_num, t in enumerate(ts):
-                    update(t, api_1, group_num+1)
+                for group_num, t in enumerate(groups):
+                    update(t, api, group_num+1)
             except Exception as e:
-                print('Failed to read results. Format round results correctly and try again')
+                print('Failed to read results. Format results correctly and try again')
                 print(str(e))
                 continue
 
-            final = set_final(ts, api_1)
-            break
+            final = set_final(groups)
+            return final
 
         elif split[0] == 'list':
-            for group_num, t in enumerate(ts):
+            for group_num, t in enumerate(groups):
                 print(f'Group {group_num+1}')
                 print(t.list_fighters())
 
         else:
-            print('Unknown command, only \'list\', \'round\' and \'restart <int>\' can be used')
+            print('Unknown command, only \'list\', \'final\' and \'exit\'  can be used')
 
-    print('Final stage')
-    round_num = 1
 
+def final_stage(final, api):
+    round_num=1
+    set_group(final, [api], round_num + 10)
     while True:
         command = input()
         split = command.split(' ')
@@ -202,17 +209,65 @@ def main():
 
         elif split[0] == 'round':
             try:
-                update(final, api_1, round_num + len(ts))
-                set_round(final, [api_2, api_1], round_num+1+len(ts))
+                update(final, api, round_num + 10)
+                set_group(final, [api], round_num+11)
             except Exception as e:
                 print('Failed to update round {}. Format round results correctly and try again'.format(round_num))
                 print(str(e))
                 continue
             round_num += 1
 
-        else:
-            print('Unknown command, only \'list\', \'round\' and \'restart <int>\' can be used')
+        elif split[0] == 'list':
+            print(final.list_fighters())
 
+        else:
+            print('Unknown command, only \'list\', \'round\' and \'exit\' can be used')
+
+
+def main():
+    #Input check. Too simple to use click or others
+    if len(sys.argv) < 2:
+        print('There must be parameter - filename')
+    fighters_file = sys.argv[1]
+
+    start_new = True
+    #skip_selections = False
+
+    if len(sys.argv) >= 3:
+        if sys.argv[2] == '-r':
+            # Restart from existing data
+            start_new = False
+        #elif sys.argv[2] == '-f':
+            # Start finals from the list of fighters
+        #    skip_selections = True
+        #elif sys.argv[2] == '-rf' or sys.argv[2] == '-fr':
+        #    skip_selections = True
+        #    start_new = False
+
+
+    #Tournament setup
+    ts = tournament_from_file(fighters_file)
+
+    for group_num, t in enumerate(ts):
+        print(f'Group {group_num+1}')
+        print(t.list_fighters())
+
+    # API setup
+    api = GoogleAPI(config.google_doc, 1, "MwSzabla", collaborators=config.collaborators)
+    #api_2 = CsvApi(config.csv_folder, config.csv_name)
+
+    if start_new:
+        start(ts, api)
+        print("Tournament ready: group stage")
+    else:
+        print(f"Tournament ready from existing spreadsheet, the data is in {api.SpreadsheetURL}")
+
+    final = group_stage(ts, api)
+    if final:
+        print('Final stage')
+        final_stage(final, api)
+
+    print('Exiting')
 
 
 if __name__ == '__main__':

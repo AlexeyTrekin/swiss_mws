@@ -68,48 +68,49 @@ class GoogleAPI(Api):
         """
 
         fighter_1 = response[0].rstrip().strip('\"')
-        result_1 = (int(response[2].rstrip().strip('\"')))
-        fighter_2 = response[8].rstrip().strip('\"')
-        result_2 = (int(response[6].rstrip().strip('\"')))
+        result_1 = (int(response[1].rstrip().strip('\"')))
+        fighter_2 = response[6].rstrip().strip('\"')
+        result_2 = (int(response[5].rstrip().strip('\"')))
         r = Round(status='finished', score_1=result_1, score_2=result_2)
 
         return Fight(fighter_1, fighter_2, 'finished', rounds_num=1, rounds=[r])
 
-    def write(self,
-              pairs,
-              fighters, round_num):
-        self.add_sheet(round_num)
+    def write(self, pairs, fighters, sheet_num):
+        # todo: check if sheet exists
+        self.add_sheet(sheet_num)
 
-        area_index = split_to_areas(len(pairs), self.num_areas)
-        area_pairs = [pairs[area_index[i][0]:area_index[i][1]] for i in range(self.num_areas)]
+        all_data = []
+        position = get_pair_position(sheet_num, len(pairs), pairs[0].rounds_num)
 
-        for i, area in enumerate(area_pairs):
-            position = get_pair_position(round_num, i, len(area))
+        for i, pair in enumerate(pairs):
+            #
 
-            pair_data = [fighters[pair.fighter_1].to_list() + [''] + fighters[pair.fighter_2].to_list()[::-1] for pair in area]
-            data_request = {
-                    "valueInputOption": "USER_ENTERED",
-                    "data": [
-                        {"range": position,
-                         "majorDimension": "ROWS",
-                         # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
-                         "values": pair_data}
-            ]}
-            service.spreadsheets().values().batchUpdate(spreadsheetId=self._spreadsheet_id,
-                                                        body=data_request).execute()
+            # Add a string for every round
+            #for _ in range(pair.rounds_num):
+            all_data += [fighters[pair.fighter_1].to_list() + [''] + fighters[pair.fighter_2].to_list()[::-1]]*pair.rounds_num
+
+        data_request = {
+                "valueInputOption": "USER_ENTERED",
+                "data": [
+                    {"range": position,
+                     "majorDimension": "ROWS",
+                     # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
+                     "values": all_data}
+        ]}
+        service.spreadsheets().values().batchUpdate(spreadsheetId=self._spreadsheet_id,
+                                                    body=data_request).execute()
         return self.SpreadsheetURL
 
-    def read(self, round_num):
+    def read(self, sheet_num):
         data = []
-        for area in range(self.num_areas):
-            read_range = get_pair_position(round_num, area, 1000)
-            response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
-                                                           range=read_range).execute()
-            # response['values'] = [[fighter1, hp1, result1, result2, hp2, fighter2],[...]]
-            # we format it in the api standard Fight()
-            results = [self.parse_results(fight) for fight in response['values']]
-            data += results
-        return data
+        # We read everything like 1-round fights and parse it later
+        read_range = get_pair_position(sheet_num, 1000, 1)
+        response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
+                                                        range=read_range).execute()
+        # response['values'] = [[fighter1, hp1, result1, result2, hp2, fighter2],[...]]
+        # we format it in the api standard Fight()
+        results = [self.parse_results(fight) for fight in response['values']]
+        return results
 
     def share(self, collaborators):
         drive_service = apiclient.discovery.build('drive', 'v3', http=httpAuth)

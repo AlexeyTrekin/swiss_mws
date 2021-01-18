@@ -4,7 +4,7 @@ COLS = 15
 
 def get_format_request(sheet_id): #, rows=1000):
     # set column width
-    widths = {1: 150, 2:50, 3:50, 4:35, 5:60, 6:35, 7:50, 8:50, 9:150}
+    widths = {1: 150, 2:50, 3:35, 4:60, 5:35, 6:50, 7:150}
     request = []
     for col, w in widths.items():
         request.append({
@@ -29,7 +29,7 @@ def get_format_request(sheet_id): #, rows=1000):
                                   'startRowIndex': 0,
                                   'endRowIndex': 1,
                                   'startColumnIndex': 1,
-                                  'endColumnIndex': 7},
+                                  'endColumnIndex': 5},
                         'mergeType': 'MERGE_ALL'}}]
 
     # color the fighters
@@ -38,7 +38,7 @@ def get_format_request(sheet_id): #, rows=1000):
                                   'startRowIndex': 1,
                                   'endRowIndex': ROWS,
                                   'startColumnIndex': 1,
-                                  'endColumnIndex': 5},
+                                  'endColumnIndex': 4},
                         'cell': {"userEnteredFormat": {
                             "backgroundColor": {
                                 "red": 1,
@@ -51,8 +51,8 @@ def get_format_request(sheet_id): #, rows=1000):
         {'repeatCell': {'range': {'sheetId': sheet_id,
                                   'startRowIndex': 1,
                                   'endRowIndex': ROWS,
-                                  'startColumnIndex': 6,
-                                  'endColumnIndex': 10},
+                                  'startColumnIndex': 5,
+                                  'endColumnIndex': 8},
                         'cell': {"userEnteredFormat": {
                             "backgroundColor": {
                                 "red": 0.6,
@@ -81,7 +81,7 @@ def get_data_request(sheet_id):
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
              "values": [
-                 ["Фамилия", "Рейтинг", "Баллы", "!", "Обоюдки", "!", "Баллы", "Рейтинг", "Фамилия"]]},
+                 ["Фамилия", "Баллы", "!", "Обоюдки", "!", "Баллы", "Фамилия"]]},
         ]}
     return data_request
 
@@ -101,20 +101,23 @@ def get_create_sheet_request(sheet_id):
     return request
 
 
-def get_pair_position(round_number, area, pair_num):
+def get_pair_position(sheet_num, pair_num, rounds_num):
     """
     Gets the position in format Round_1!A1:A3
+    The position is 1-column only
     :param round_number:
     :param area:
     :param pair_num:
     :return:
     """
     # 1-based area
-    columns = ('B', 'J')
+    column_begin = 'B'
+    column_end = 'J'
 
-    sheet = f'Group_{round_number}'
-    row = pair_num + 3  # heading
-    return '{sheet}!{begin}3:{end}{row}'.format(sheet=sheet, row=row, begin=columns[0], end=columns[1])
+    sheet = f'Group_{sheet_num}'
+    row_begin = pair_num*rounds_num + 3  # heading
+    row_end = row_begin + rounds_num
+    return f'{sheet}!{column_begin}3:{column_end}{row_end}'
 
 
 def get_all_range(round_number):
