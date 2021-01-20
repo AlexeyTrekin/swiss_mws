@@ -233,6 +233,8 @@ class Tournament:
             return False
         return True
 
+        # Draw when it is not allowed
+
     def make_pairs(self):
         """
         Invokes the pairing functions and makes new pairs.

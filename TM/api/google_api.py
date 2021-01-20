@@ -4,8 +4,7 @@ import apiclient.discovery
 from oauth2client.service_account import ServiceAccountCredentials as SAC
 
 from .api import Api
-from .utils import split_to_areas
-from TM.tournament import Fight, Fighter, Round
+from TM.tournament import Fight, Round
 
 from .google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
 
@@ -19,12 +18,12 @@ service = apiclient.discovery.build('sheets', 'v4', http=httpAuth)
 #doc_id ='1pdeBOVo3SFBAXPw6wcPfK3bn_yQfNcuNBFVpwOpdfGg'
 
 
-def create_new_doc(name, rows=1000, columns=25):
-    sheets = [(
-        {'properties': {'sheetType': 'GRID',
-                        'sheetId': 1000,
-                        'title': 'Hello',
-                        'gridProperties': {'rowCount': rows, 'columnCount': columns}}})]
+def create_new_doc(name, rows=100, columns=9):
+    sheets = [] #(
+        #{'properties': {'sheetType': 'GRID',
+        #                'sheetId': 1000,
+        #                'title': 'Hello',
+        #                'gridProperties': {'rowCount': rows, 'columnCount': columns}}})]
 
     try:
         spreadsheet = service.spreadsheets().create(body={
@@ -38,10 +37,12 @@ def create_new_doc(name, rows=1000, columns=25):
 
 
 class GoogleAPI(Api):
-    def __init__(self, spreadsheet_id=None, num_areas=1,
+    def __init__(self, spreadsheet_id=None, num_areas=1, num_rounds=1,
                  name="", collaborators=None, **kwargs):
         Api.__init__(self)
         self.num_areas = num_areas
+        self.num_rounds=num_rounds
+
         if spreadsheet_id is not None:
             self._spreadsheet_id = spreadsheet_id
         else:
@@ -66,28 +67,90 @@ class GoogleAPI(Api):
         :param response:
         :return:
         """
+        rounds = []
 
-        fighter_1 = response[0].rstrip().strip('\"')
-        result_1 = (int(response[1].rstrip().strip('\"')))
-        fighter_2 = response[6].rstrip().strip('\"')
-        result_2 = (int(response[5].rstrip().strip('\"')))
-        r = Round(status='finished', score_1=result_1, score_2=result_2)
+        '''
+        
+        fighter_1 = response[0][0].rstrip().strip('\"')
+        fighter_2 = response[0][6].rstrip().strip('\"')
 
-        return Fight(fighter_1, fighter_2, 'finished', rounds_num=1, rounds=[r])
+        for line in response:
+            result_1 = (int(line[1].rstrip().strip('\"')))
+            result_2 = (int(line[5].rstrip().strip('\"')))
+
+            warnings_1 = (int(line[2].rstrip().strip('\"')))
+            warnings_2 = (int(line[4].rstrip().strip('\"')))
+
+            doubles = (int(response[3].rstrip().strip('\"')))
+
+            rounds.append(Round(status='finished', score_1=result_1, score_2=result_2,
+                                doubles=doubles, warnings_1=warnings_1, warnings_2=warnings_2))
+        '''
+
+        fighter_1 = response[0][0].rstrip().strip('\"')
+        fighter_2 = response[0][6].rstrip().strip('\"')
+        #print(response)
+        for line in response:
+            # Pad the line because the empty trailing cells are omitted
+            while len(line) < 6:
+                line.append('')
+            # We do not want to fill all the fields, so if they are empty (or full of bullshit) we ignore them and put 0
+            try:
+                result_1 = (int(line[1].rstrip().strip('\"')))
+            except ValueError:
+                result_1 = 0
+            try:
+                result_2 = (int(line[5].rstrip().strip('\"')))
+            except ValueError:
+                result_2 = 0
+            try:
+                warnings_1 = (int(line[2].rstrip().strip('\"')))
+            except ValueError:
+                warnings_1 = 0
+            try:
+                warnings_2 = (int(line[4].rstrip().strip('\"')))
+            except ValueError:
+                warnings_2 = 0
+            try:
+                doubles = (int(line[3].rstrip().strip('\"')))
+            except ValueError:
+                doubles = 0
+
+            rounds.append(Round(status='finished', score_1=result_1, score_2=result_2,
+                                    doubles=doubles, warnings_1=warnings_1, warnings_2=warnings_2))
+
+        return Fight(fighter_1, fighter_2, 'finished', rounds_num=len(rounds), rounds=rounds)
 
     def write(self, pairs, fighters, sheet_num):
         # todo: check if sheet exists
         self.add_sheet(sheet_num)
 
         all_data = []
-        position = get_pair_position(sheet_num, len(pairs), pairs[0].rounds_num)
+        position = get_pair_position(sheet_num, len(pairs), self.num_rounds)
+        format_request = []
 
         for i, pair in enumerate(pairs):
             #
 
             # Add a string for every round
             #for _ in range(pair.rounds_num):
-            all_data += [fighters[pair.fighter_1].to_list() + [''] + fighters[pair.fighter_2].to_list()[::-1]]*pair.rounds_num
+            all_data += [fighters[pair.fighter_1].to_list() + [''] + fighters[pair.fighter_2].to_list()[::-1]]*self.num_rounds
+            # Merge cells
+            if self.num_rounds > 0:
+                format_request += [
+                    {'mergeCells': {'range': {'sheetId': sheet_num,
+                                              'startRowIndex': self.num_rounds*i + 2,
+                                              'endRowIndex': self.num_rounds*(i+1) + 2,
+                                              'startColumnIndex': 1,
+                                              'endColumnIndex': 2},
+                                    'mergeType': 'MERGE_ALL'}},
+                    {'mergeCells': {'range': {'sheetId': sheet_num,
+                                              'startRowIndex': self.num_rounds*(i) + 2,
+                                              'endRowIndex': self.num_rounds*(i+1) + 2,
+                                              'startColumnIndex': 7,
+                                              'endColumnIndex': 8},
+                                    'mergeType': 'MERGE_ALL'}}
+                ]
 
         data_request = {
                 "valueInputOption": "USER_ENTERED",
@@ -99,17 +162,25 @@ class GoogleAPI(Api):
         ]}
         service.spreadsheets().values().batchUpdate(spreadsheetId=self._spreadsheet_id,
                                                     body=data_request).execute()
+        if self.num_rounds > 1:
+            response = service.spreadsheets().batchUpdate(spreadsheetId=self._spreadsheet_id,
+                                               body={"requests": format_request}).execute()
         return self.SpreadsheetURL
 
     def read(self, sheet_num):
-        data = []
+
         # We read everything like 1-round fights and parse it later
-        read_range = get_pair_position(sheet_num, 1000, 1)
+        read_range = get_pair_position(sheet_num, 1000, self.num_rounds)
+
         response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
                                                         range=read_range).execute()
-        # response['values'] = [[fighter1, hp1, result1, result2, hp2, fighter2],[...]]
+
+        # response['values'] = [[fighter1, result1, warnings1, doubles, warnings2, result2, fighter2],[...]]
         # we format it in the api standard Fight()
-        results = [self.parse_results(fight) for fight in response['values']]
+        fights = []
+        for fight_num in range(len(response['values'])//self.num_rounds):
+            fights.append([response['values'][i] for i in range(fight_num*self.num_rounds, (fight_num+1)*self.num_rounds)])
+        results = [self.parse_results(fight) for fight in fights]
         return results
 
     def share(self, collaborators):
@@ -154,11 +225,11 @@ class GoogleAPI(Api):
         return
 
     def add_sheet(self, round_num):
-        request = get_create_sheet_request(sheet_id=round_num-1)
+        request = get_create_sheet_request(sheet_id=round_num)
         try:
             service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheet_id,
                                                      body={"requests": request}).execute()
         except Exception as e:
             print('Failed to create the page for round {}\n'.format(round_num) + str(e))
-        self.fill_heading(round_num-1)
+        self.fill_heading(round_num)
 

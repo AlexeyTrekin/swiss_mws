@@ -10,7 +10,6 @@ from .api import Api
 from .utils import split_to_areas
 
 
-
 def generate_tokens(num_areas: int, length: int=10):
     letters = string.ascii_lowercase
     return [''.join(choice(letters) for i in range(length)) for area in range(num_areas)]
@@ -128,7 +127,7 @@ class HttpApi:
 
     def write(self, pairs, round_num):
         self.pairs = pairs
-        self.fights = [Fight(p[0].name, p[1].name, conducted=False) for p in pairs]
+        self.fights = [Fight(p[0].name, p[1].name, status='planned') for p in pairs]
 
         self.round_num = round_num
         return self.host + '/' + self.port
