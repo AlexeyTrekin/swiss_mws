@@ -56,8 +56,6 @@ def start(ts: List[Tournament], api):
         set_group(t, [api], group_num+1)
 
 
-
-
 def main():
     #Input check. Too simple to use click or others
     if len(sys.argv) < 2:

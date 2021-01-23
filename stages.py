@@ -24,7 +24,7 @@ def set_group(t, apis, group_num):
         print("Failed to write to file \n" + str(e))
 
 
-def set_round(t, apis, round_num):
+def set_round(t, apis, round_num=None):
 
     if len(t.fighters) in [8, 16, 32]:
         # Remove the fighters who lost previous playoff round
@@ -41,8 +41,11 @@ def set_round(t, apis, round_num):
     t.make_pairs()
     try:
         filename = ''
+        # We encode the playoff stage in the sheet ID as 10 + 4/2 = 1/2; 10+8/2 = 1/4, 10+32/2 = 1/16
+        if not round_num:
+            round_num = 10 + len(t.fighters) // 2
+
         for api in apis:
-            #sheet_name = f'1/{len(t.fighters)/2}'
             filename = t.write_pairs(api, round_num)
         # t.pairs_to_csv(filename + '_pairs.csv')
         # t.standings_to_txt(filename + '_standings.txt')
@@ -50,9 +53,7 @@ def set_round(t, apis, round_num):
     except Exception as e:
         print("Failed to write to file \n" + str(e))
 
-    # Write the data
-    pass
-
+    return round_num
 
 # ================================================= #
 # =========== Stage definitions =================== #
@@ -127,7 +128,6 @@ def set_playoff(groups):
 
 
 def playoff_stage(finalists, api):
-    round_num = 1
 
     playoff = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(finalists),
                                              start_rating=0,
@@ -138,7 +138,7 @@ def playoff_stage(finalists, api):
                                              time=90),
                        fighters=finalists)
 
-    set_round(playoff, [api], round_num + 10)
+    round_num = set_round(playoff, [api])
     while True:
         command = input()
         split = command.split(' ')
@@ -151,9 +151,9 @@ def playoff_stage(finalists, api):
 
         elif split[0] == 'round':
             try:
-                update(playoff, api, round_num + 10)
+                update(playoff, api, round_num)
                 if len(playoff.fighters) > 4:
-                    set_round(playoff, [api], round_num + 11)
+                    round_num = set_round(playoff, [api])
                 else:
                     finalists = playoff.fighters
 
@@ -162,7 +162,6 @@ def playoff_stage(finalists, api):
                 print('Failed to update round {}. Format round results correctly and try again'.format(round_num))
                 print(str(e))
                 continue
-            round_num += 1
 
         elif split[0] == 'list':
             print(playoff.list_fighters())

@@ -128,7 +128,12 @@ class GoogleAPI(Api):
         sheets_info = service.spreadsheets().get(spreadsheetId=self._spreadsheet_id).execute()
         sheet_ids = [sheet['properties']['sheetId'] for sheet in sheets_info['sheets']]
         if sheet_name is None:
-            sheet_name = f'Group_{sheet_num}'
+            if sheet_num < 10:
+                sheet_name = f'Группа {sheet_num}'
+            elif sheet_num < 100:
+                sheet_name = f'1/{sheet_num - 10}'
+            else:
+                sheet_name = 'Финал'
         # Store the id:name mapping
         self.sheet_names[sheet_num] = sheet_name
 
@@ -187,10 +192,18 @@ class GoogleAPI(Api):
     def read(self, sheet_num):
         try:
             sheet_name = self.sheet_names[sheet_num]
+            print(sheet_name)
         except KeyError as ke:
-            print(f'The sheet with ID {sheet_num} is not present in the file')
-            raise ke
-
+            # Read the names from the file
+            sheets_info = service.spreadsheets().get(spreadsheetId=self._spreadsheet_id).execute()
+            sheet_names = [sheet['properties']['title'] for sheet in sheets_info['sheets']
+                           if sheet['properties']['sheetId'] == sheet_num]
+            if len(sheet_names) == 0:
+                print(f'The sheet with ID {sheet_num} is not present in the file')
+                raise ke
+            else:
+                sheet_name = sheet_names[0]
+                
         # We read everything like 1-round fights and parse it later
         read_range = get_pair_position(sheet_name, 1000, self.num_rounds)
         response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
