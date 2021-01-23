@@ -29,7 +29,6 @@ def tournament_from_file(fighters_file):
     # Add the last group in case there is no last empty string
     if new_group != []:
         groups.append(new_group)
-
     tournaments = []
     for group in groups:
         t = Tournament(rules=TournamentRules(pairing_function=RoundPairings(),
@@ -41,6 +40,7 @@ def tournament_from_file(fighters_file):
                                              time=90),
                        fighters=group)
         tournaments.append(t)
+
     return tournaments
 
 
@@ -82,9 +82,9 @@ def main():
     #Tournament setup
     ts = tournament_from_file(fighters_file)
 
-    for group_num, t in enumerate(ts):
-        print(f'Group {group_num+1}')
-        print(t.list_fighters())
+    #for group_num, t in enumerate(ts):
+    #    print(f'Group {group_num+1}')
+    #    print(t.list_fighters())
 
     # API setup
     api = GoogleAPI(config.google_doc, num_areas=1, num_rounds=1,

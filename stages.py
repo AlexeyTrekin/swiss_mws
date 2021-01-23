@@ -2,11 +2,13 @@ from TM.tournament import Tournament, TournamentRules
 from TM.pairings import PlayoffPairings, RoundPairings
 from calc_rating import calc_rating_selections, calc_rating_playoff
 
+
 # ============ IO ================ #
 def update(t: Tournament, api, round_num):
     t.read_results(api, round_num)
     print("Results imported\n".format(round_num))
     return
+
 
 def set_group(t, apis, group_num):
     # Automatic file name
@@ -14,7 +16,7 @@ def set_group(t, apis, group_num):
     try:
         filename = ''
         for api in apis:
-            filename = t.write_pairs(api, group_num)
+            filename = t.write_pairs(api, group_num, )
         # t.pairs_to_csv(filename + '_pairs.csv')
         # t.standings_to_txt(filename + '_standings.txt')
         print("Pairs calculated, saved to file " + filename)
@@ -51,10 +53,12 @@ def set_round(t, apis, round_num):
     # Write the data
     pass
 
+
 # ================================================= #
 # =========== Stage definitions =================== #
 
-def group_stage(groups, api):
+def group_stage(tournaments, api):
+
     while True:
         command = input()
         split = command.split(' ')
@@ -67,23 +71,24 @@ def group_stage(groups, api):
 
         elif split[0] == 'final':
             try:
-                for group_num, t in enumerate(groups):
+                for group_num, t in enumerate(tournaments):
                     update(t, api, group_num+1)
             except Exception as e:
                 print('Failed to read results. Format results correctly and try again')
                 print(str(e))
                 continue
 
-            playoff = set_playoff(groups)
+            playoff = set_playoff(tournaments)
             return playoff
 
         elif split[0] == 'list':
-            for group_num, t in enumerate(groups):
+            for group_num, t in enumerate(tournaments):
                 print(f'Group {group_num+1}')
                 print(t.list_fighters())
 
         else:
             print('Unknown command, only \'list\', \'final\' and \'exit\'  can be used')
+
 
 def set_playoff(groups):
     print('Setting playoff')
@@ -115,6 +120,15 @@ def set_playoff(groups):
     for position, f in enumerate(finalists):
         f.rating = len(finalists) - position
 
+
+    #print(final.list_fighters())
+
+    return finalists
+
+
+def playoff_stage(finalists, api):
+    round_num = 1
+
     playoff = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(finalists),
                                              start_rating=0,
                                              max_rating=0,
@@ -123,14 +137,6 @@ def set_playoff(groups):
                                              rounds_num=1,
                                              time=90),
                        fighters=finalists)
-
-    #print(final.list_fighters())
-
-    return playoff
-
-
-def playoff_stage(playoff, api):
-    round_num = 1
 
     set_round(playoff, [api], round_num + 10)
     while True:
@@ -150,16 +156,8 @@ def playoff_stage(playoff, api):
                     set_round(playoff, [api], round_num + 11)
                 else:
                     finalists = playoff.fighters
-                    final = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(finalists),
-                                             start_rating=0,
-                                             max_rating=0,
-                                             min_rating=-1000,
-                                             round_points_cap=8, rating_fn=calc_rating_playoff,
-                                             rounds_num=3,
-                                             time=90),
-                                       fighters=finalists)
 
-                    return final
+                    return finalists
             except Exception as e:
                 print('Failed to update round {}. Format round results correctly and try again'.format(round_num))
                 print(str(e))
@@ -173,7 +171,16 @@ def playoff_stage(playoff, api):
             print('Unknown com mand, only \'list\', \'round\' and \'exit\' can be used')
 
 
-def final_stage(final, api):
+def final_stage(finalists, api):
+    final = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(finalists),
+                                             start_rating=0,
+                                             max_rating=0,
+                                             min_rating=-1000,
+                                             round_points_cap=8, rating_fn=calc_rating_playoff,
+                                             rounds_num=3,
+                                             time=90),
+                       fighters=finalists)
+
     api.num_rounds = final.rules.rounds_num
     print(f'Final fights are: {final.fighters[0].name} vs {final.fighters[1].name}, '
           f'{final.fighters[2].name} vs {final.fighters[3].name}')

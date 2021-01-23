@@ -12,7 +12,8 @@ class Api:
     def write(self,
               pairs: List[Fight],
               fighters: Dict[str, Fighter],
-              round_num: int):
+              round_num: int,
+              **kwargs):
         """
         :param pairs: a list of Fight instances - empty, for the further processing and filling
         :param fighters: a list of Fighters, that covers all the members in pairs, with all the additional Fighter data

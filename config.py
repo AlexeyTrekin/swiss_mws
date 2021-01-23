@@ -1,5 +1,5 @@
 # Google spreadsheet ID, or None if we want to create a new
-google_doc = '136ngQAWG20veAWGMQcrZEaTefHXQw31KBU5znvAVAM0'
+google_doc = None#'136ngQAWG20veAWGMQcrZEaTefHXQw31KBU5znvAVAM0'
 
 # list of google accounts to share the new doc with
 collaborators = ['alexey.trekin@gmail.com', 'kazakovvan@gmail.com']

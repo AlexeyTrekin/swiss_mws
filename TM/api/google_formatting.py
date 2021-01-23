@@ -2,7 +2,7 @@ ROWS = 100
 COLS = 9
 
 
-def get_format_request(sheet_id): #, rows=1000):
+def get_format_request(sheet_num):
     # set column width
     widths = {1: 150, 2:50, 3:35, 4:60, 5:35, 6:50, 7:150}
     request = []
@@ -10,7 +10,7 @@ def get_format_request(sheet_id): #, rows=1000):
         request.append({
             "updateDimensionProperties": {
                 "range": {
-                    "sheetId": sheet_id,
+                    "sheetId": sheet_num,
                     "dimension": "COLUMNS",  # COLUMNS - потому что столбец
                     "startIndex": col,  # Столбцы нумеруются с нуля
                     "endIndex": col + 1  # startIndex берётся включительно, endIndex - НЕ включительно,
@@ -25,7 +25,7 @@ def get_format_request(sheet_id): #, rows=1000):
 
     # merge cells for the header
     request += [
-        {'mergeCells': {'range': {'sheetId': sheet_id,
+        {'mergeCells': {'range': {'sheetId': sheet_num,
                                   'startRowIndex': 0,
                                   'endRowIndex': 1,
                                   'startColumnIndex': 1,
@@ -34,7 +34,7 @@ def get_format_request(sheet_id): #, rows=1000):
 
     # color the fighters
     request += [
-        {'repeatCell': {'range': {'sheetId': sheet_id,
+        {'repeatCell': {'range': {'sheetId': sheet_num,
                                   'startRowIndex': 1,
                                   'endRowIndex': ROWS,
                                   'startColumnIndex': 1,
@@ -48,7 +48,7 @@ def get_format_request(sheet_id): #, rows=1000):
                             }}},
                         'fields': 'userEnteredFormat'}},
 
-        {'repeatCell': {'range': {'sheetId': sheet_id,
+        {'repeatCell': {'range': {'sheetId': sheet_num,
                                   'startRowIndex': 1,
                                   'endRowIndex': ROWS,
                                   'startColumnIndex': 5,
@@ -67,17 +67,17 @@ def get_format_request(sheet_id): #, rows=1000):
     return request
 
 
-def get_data_request(sheet_id):
+def get_data_request(sheet_name: str):
 
     data_request = {
         "valueInputOption": "USER_ENTERED",
         "data": [
-            {"range": "Group_{}!B1:B1".format(sheet_id),
+            {"range": "{}!B1:B1".format(sheet_name),
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
              "values": [["1 ристалище"]]},
 
-            {"range": "Group_{}!B2:J2".format(sheet_id),
+            {"range": "{}!B2:J2".format(sheet_name),
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
              "values": [
@@ -86,14 +86,16 @@ def get_data_request(sheet_id):
     return data_request
 
 
-def get_create_sheet_request(sheet_id):
+def get_create_sheet_request(sheet_id, sheet_name, rows=None, cols=None):
+    rows = rows or ROWS
+    cols = cols or COLS
     request = [{'addSheet':
                 {'properties': {
                       "sheetId": sheet_id,
-                      "title": 'Group_{}'.format(sheet_id),
+                      "title": sheet_name,
                       "gridProperties": {
-                          "rowCount": ROWS,
-                          "columnCount": COLS
+                          "rowCount": rows,
+                          "columnCount": cols
                       },
                    }
                  }
@@ -101,7 +103,7 @@ def get_create_sheet_request(sheet_id):
     return request
 
 
-def get_pair_position(sheet_num, pair_num, num_rounds):
+def get_pair_position(sheet_name, pair_num, num_rounds):
     """
     Gets the position in format Round_1!A1:A3
     The position is 1-column only
@@ -115,12 +117,11 @@ def get_pair_position(sheet_num, pair_num, num_rounds):
     column_begin = 'B'
     column_end = 'J'
 
-    sheet = f'Group_{sheet_num}'
     row_begin = pair_num * num_rounds + 3  # heading
     row_end = row_begin + num_rounds
 
-    return f'{sheet}!{column_begin}3:{column_end}{row_end}'
+    return f'{sheet_name}!{column_begin}3:{column_end}{row_end}'
 
 
-def get_all_range(round_number):
-    return 'Group_{}!A1:J{}'.format(round_number, ROWS)
+def get_all_range(sheet_name):
+    return f'{sheet_name}!A1:J{ROWS}'

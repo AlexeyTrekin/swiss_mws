@@ -9,7 +9,7 @@ from TM.tournament import Fight, Round
 from .google_formatting import get_data_request, get_format_request, get_pair_position, get_create_sheet_request, get_all_range
 
 CREDENTIALS_FILE = 'google_token.json'
-
+DEFAULT_SHEET = 1000
 
 credentials = SAC.from_json_keyfile_name(CREDENTIALS_FILE, ['https://www.googleapis.com/auth/spreadsheets',
                                                               'https://www.googleapis.com/auth/drive'])
@@ -18,12 +18,12 @@ service = apiclient.discovery.build('sheets', 'v4', http=httpAuth)
 #doc_id ='1pdeBOVo3SFBAXPw6wcPfK3bn_yQfNcuNBFVpwOpdfGg'
 
 
-def create_new_doc(name, rows=100, columns=9):
-    sheets = [] #(
-        #{'properties': {'sheetType': 'GRID',
-        #                'sheetId': 1000,
-        #                'title': 'Hello',
-        #                'gridProperties': {'rowCount': rows, 'columnCount': columns}}})]
+def create_new_doc(name):
+    sheets = [(
+        {'properties': {'sheetType': 'GRID',
+                        'sheetId': DEFAULT_SHEET,
+                        'title': 'Hello',
+                        'gridProperties': {'rowCount': 1, 'columnCount': 1}}})]
 
     try:
         spreadsheet = service.spreadsheets().create(body={
@@ -38,15 +38,17 @@ def create_new_doc(name, rows=100, columns=9):
 
 class GoogleAPI(Api):
     def __init__(self, spreadsheet_id=None, num_areas=1, num_rounds=1,
-                 name="", collaborators=None, **kwargs):
+                 name="", collaborators=None):
         Api.__init__(self)
         self.num_areas = num_areas
         self.num_rounds=num_rounds
 
+        self.sheet_names = {}
+
         if spreadsheet_id is not None:
             self._spreadsheet_id = spreadsheet_id
         else:
-            self._spreadsheet_id = create_new_doc(name, **kwargs)
+            self._spreadsheet_id = create_new_doc(name)
         if collaborators:
             self.share(collaborators)
         #for r in range(rounds):
@@ -121,12 +123,27 @@ class GoogleAPI(Api):
 
         return Fight(fighter_1, fighter_2, 'finished', rounds_num=len(rounds), rounds=rounds)
 
-    def write(self, pairs, fighters, sheet_num):
-        # todo: check if sheet exists
-        self.add_sheet(sheet_num)
+    def write(self, pairs, fighters, sheet_num, sheet_name=None):
+        # check if sheet exists
+        sheets_info = service.spreadsheets().get(spreadsheetId=self._spreadsheet_id).execute()
+        sheet_ids = [sheet['properties']['sheetId'] for sheet in sheets_info['sheets']]
+        if sheet_name is None:
+            sheet_name = f'Group_{sheet_num}'
+        # Store the id:name mapping
+        self.sheet_names[sheet_num] = sheet_name
+
+        if not sheet_num in sheet_ids:
+            # If we try to create existing sheet, we get an annoying error response.
+            # However, we could delete-create this sheet instead to avoid format errors
+            self.add_sheet(sheet_num, sheet_name, rows=3 + len(pairs)*self.num_rounds)
+
+        if DEFAULT_SHEET in sheet_ids:
+            # remove the initial sheet - it is useless
+            service.spreadsheets().batchUpdate(spreadsheetId=self._spreadsheet_id,
+                                               body={'requests':[{'deleteSheet':{'sheetId': DEFAULT_SHEET}}]}).execute()
 
         all_data = []
-        position = get_pair_position(sheet_num, len(pairs), self.num_rounds)
+        position = get_pair_position(sheet_name, len(pairs), self.num_rounds)
         format_request = []
 
         for i, pair in enumerate(pairs):
@@ -168,10 +185,14 @@ class GoogleAPI(Api):
         return self.SpreadsheetURL
 
     def read(self, sheet_num):
+        try:
+            sheet_name = self.sheet_names[sheet_num]
+        except KeyError as ke:
+            print(f'The sheet with ID {sheet_num} is not present in the file')
+            raise ke
 
         # We read everything like 1-round fights and parse it later
-        read_range = get_pair_position(sheet_num, 1000, self.num_rounds)
-
+        read_range = get_pair_position(sheet_name, 1000, self.num_rounds)
         response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,
                                                         range=read_range).execute()
 
@@ -200,36 +221,38 @@ class GoogleAPI(Api):
                     fields='id'
             ).execute()
 
-    def fill_heading(self, sheet_id):
-        request = get_format_request(sheet_id)
+    def fill_heading(self, sheet_num, sheet_name):
+
+        request = get_format_request(sheet_num)
         # Execute the request
         try:
             service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheet_id,
                                                      body={"requests": request}).execute()
         except Exception as e:
-            print('Failed to format the page {}\n'.format(sheet_id) + str(e))
+            print('Failed to format the page {}\n'.format(sheet_name) + str(e))
 
         try:
             service.spreadsheets().values().clear(spreadsheetId=self.spreadsheet_id,
-                                                  range=get_all_range(sheet_id + 1)).execute()
+                                                  range=get_all_range(sheet_name)).execute()
         except Exception as e:
-            print('Failed to clear the table values in the page {}\n'.format(sheet_id) + str(e))
+            print('Failed to clear the table values in the page {}\n'.format(sheet_name) + str(e))
 
         # Data request - fill the static data
-        data_request = get_data_request(sheet_id)
+        data_request = get_data_request(sheet_name)
         try:
             service.spreadsheets().values().batchUpdate(spreadsheetId=self._spreadsheet_id,
                                                               body=data_request).execute()
         except Exception as e:
-            print('Failed to put the table header {}\n'.format(sheet_id) + str(e))
+            print('Failed to put the table header for sheet {}\n'.format(sheet_name) + str(e))
         return
 
-    def add_sheet(self, round_num):
-        request = get_create_sheet_request(sheet_id=round_num)
+    def add_sheet(self, sheet_num, sheet_name=None, rows=None, cols=None):
+
+        request = get_create_sheet_request(sheet_id=sheet_num, sheet_name=sheet_name, rows=rows, cols=cols)
         try:
             service.spreadsheets().batchUpdate(spreadsheetId=self.spreadsheet_id,
                                                      body={"requests": request}).execute()
         except Exception as e:
-            print('Failed to create the page for round {}\n'.format(round_num) + str(e))
-        self.fill_heading(round_num)
+            print('Failed to create the page for round {}\n'.format(sheet_num) + str(e))
+        self.fill_heading(sheet_num, sheet_name)
 

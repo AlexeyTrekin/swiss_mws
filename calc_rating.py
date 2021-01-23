@@ -8,7 +8,14 @@ def calc_rating_selections(rounds: List[Round]):
     # Поэтому за победу даем 10000, за ничью 1000, разницу учитываем как есть
     # Порядок критериев строго соблюдается если ничьих меньше 10, а баллов меньше 1000, что всегда верно
     # Selections (1-round fight)
+    assert len(rounds) == 1
+
     score_diff = rounds[0].score_1 - rounds[0].score_2
+
+    # Both lose on doubles, saving the point diff
+    if rounds[0].doubles >= 4:
+        return score_diff, -score_diff
+
     if score_diff == 0:
         # Draw rating
         return 1000, 1000
@@ -41,6 +48,13 @@ def calc_rating_playoff(rounds: List[Round]):
         raise ValueError('Draw is not allowed in the finals')
     '''
     assert len(rounds) == 1
+
+    # Both lose on doubles
+    # However it would spoil the pairings (will fix it later) so we will assign a win, but without  a
+    # if rounds[0].doubles >= 4:
+    #    return -100, -100
+    #
+
     if rounds[0].score_2 > rounds[0].score_1:
         return -100, 0
     elif rounds[0].score_1 > rounds[0].score_2:
