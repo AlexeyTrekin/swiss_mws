@@ -203,7 +203,7 @@ class GoogleAPI(Api):
                 raise ke
             else:
                 sheet_name = sheet_names[0]
-                
+
         # We read everything like 1-round fights and parse it later
         read_range = get_pair_position(sheet_name, 1000, self.num_rounds)
         response = service.spreadsheets().values().get(spreadsheetId=self._spreadsheet_id,

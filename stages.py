@@ -1,5 +1,5 @@
 from TM.tournament import Tournament, TournamentRules
-from TM.pairings import PlayoffPairings, RoundPairings
+from TM.pairings import PlayoffPairings, RoundPairings, FinalPairings
 from calc_rating import calc_rating_selections, calc_rating_playoff
 
 
@@ -171,7 +171,7 @@ def playoff_stage(finalists, api):
 
 
 def final_stage(finalists, api):
-    final = Tournament(rules=TournamentRules(pairing_function=PlayoffPairings(finalists),
+    final = Tournament(rules=TournamentRules(pairing_function=FinalPairings(),
                                              start_rating=0,
                                              max_rating=0,
                                              min_rating=-1000,
