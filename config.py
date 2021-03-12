@@ -1,8 +1,8 @@
 # Google spreadsheet ID, or None if we want to create a new
-google_doc = '1OOP15y_wYcHSyKnlzXi5eoMMfpdtXMP73EqtKTzgv9k'
+google_doc = None#'1OOP15y_wYcHSyKnlzXi5eoMMfpdtXMP73EqtKTzgv9k'
 
 # list of google accounts to share the new doc with
-collaborators = ['alexey.trekin@gmail.com', 'kazakovvan@gmail.com']
+collaborators = ['alexey.trekin@gmail.com', 'kazakovvan@gmail.com', 'mwstablo1@gmail.com', 'mwstablo2@gmail.com ']
 
 # Base name for csv files
 csv_name = 'mws'
