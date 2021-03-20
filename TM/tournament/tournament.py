@@ -205,10 +205,10 @@ class Tournament:
             return False
 
         # rating points cap
-        if self.rules.max_rating \
+        if self.rules.max_rating is not None \
                 and (fight.rating_score_1 > self.rules.max_rating or fight.rating_score_2 > self.rules.max_rating):
             return False
-        if self.rules.min_rating \
+        if self.rules.min_rating is not None \
                 and (fight.rating_score_1 < self.rules.min_rating or fight.rating_score_2 < self.rules.min_rating):
             return False
 

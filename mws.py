@@ -1,8 +1,8 @@
 import sys
 import random
-
-from TM.tournament import Tournament, Fighter, TournamentRules
-from TM.api import CsvApi, HttpApi, GoogleAPI
+from typing import List
+from TM.tournament import Tournament, Fighter, TournamentRules, Round
+from TM.api import GoogleAPI
 from TM.pairings import SwissPairings, RoundPairings
 
 import config
@@ -23,7 +23,7 @@ def remove(tournament: Tournament, v=True):
         else:
             minHP = min(minHP, f.rating)
 
-    # If there 6 fighters or less, we can make finals:
+    # If there are 6 fighters or less, we can make finals:
     if len(tournament.fighters) - len(new_outs) <= 2:
         finalists = [f for f in tournament.fighters if f.rating > 0]
         candidates = [f for f in tournament.fighters if f.rating <= 0]
@@ -101,6 +101,16 @@ def set_round(t, apis, round_num):
 def set_final(finalists, candidates, api):
     pass
 
+def calc_rating_selections(rounds: List[Round]):
+    # self.rating_score_1, self.rating_score_2 = rating_fn(self.rounds)
+    # Критерии определения лучших: количество побед, количество ничьих, разница нанесенных и пропущенных
+    # Поэтому за победу даем 10000, за ничью 1000, разницу учитываем как есть
+    # Порядок критериев строго соблюдается если ничьих меньше 10, а баллов меньше 1000, что всегда верно
+    # Selections (1-round fight)
+    assert len(rounds) == 1
+
+    return rounds[0].score_1, rounds[0].score_2
+
 
 def start(fighters_file, pairing_function=SwissPairings()):
 
@@ -109,7 +119,8 @@ def start(fighters_file, pairing_function=SwissPairings()):
     t = Tournament(rules=TournamentRules(pairing_function=pairing_function,
                                          start_rating=config.hp,
                                          max_rating=0,
-                                         min_rating=-abs(config.cap)),
+                                         min_rating=-abs(config.cap),
+                                         rating_fn=calc_rating_selections),
                    fighters=fighters)
     return t
 
@@ -145,14 +156,14 @@ def main():
     t = start(fighters_file, pairing_function)
     # API setup
 
-    if config.main_api == 'google':
-        api_1 = GoogleAPI(config.google_doc, 2,
-                           "MwSB", collaborators=config.collaborators)
-        api_2 = CsvApi(config.csv_folder, config.csv_name)
-    else:
-        api_2 = GoogleAPI(config.google_doc, 2,
-                           "MwSB", collaborators=config.collaborators)
-        api_1 = CsvApi(config.csv_folder, config.csv_name)
+    #if config.main_api == 'google':
+    api_1 = GoogleAPI(config.google_doc, num_areas=config.num_areas,
+                           name="MwSB", collaborators=config.collaborators)
+        #api_2 = CsvApi(config.csv_folder, config.csv_name)
+   # else:
+    #    api_2 = GoogleAPI(config.google_doc, 2,
+     #                      "MwSB", collaborators=config.collaborators)
+        #api_1 = CsvApi(config.csv_folder, config.csv_name)
 
     #api_1 = HttpApi(num_areas=config.num_areas)
     #api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)
@@ -178,7 +189,7 @@ def main():
                 if res is not None:
                     set_final(res[0], res[1], api_1)
                 else:
-                    set_round(t, [api_2, api_1], round_num+1)
+                    set_round(t, [api_1], round_num+1)
             except Exception as e:
                 print('Failed to update round {}. Format round results correctly and try again'.format(round_num))
                 print(str(e))
@@ -199,7 +210,7 @@ def main():
                 # So we can setup a new round
                 t = t_tmp
                 round_num += 1
-                set_round(t, [api_2, api_1], round_num)
+                set_round(t, [api_1], round_num)
             else:
                 # Some rounds were not imported correctly, so we can proceed manually,
                 # but we do not want to lose the data due to overwriting,

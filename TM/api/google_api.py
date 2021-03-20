@@ -123,6 +123,7 @@ class GoogleAPI(Api):
 
         return Fight(fighter_1, fighter_2, 'finished', rounds_num=len(rounds), rounds=rounds)
 
+
     def write(self, pairs, fighters, sheet_num, sheet_name=None):
         # check if sheet exists
         sheets_info = service.spreadsheets().get(spreadsheetId=self._spreadsheet_id).execute()
