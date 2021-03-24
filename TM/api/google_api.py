@@ -90,7 +90,7 @@ class GoogleAPI(Api):
         '''
 
         fighter_1 = response[0][0].rstrip().strip('\"')
-        fighter_2 = response[0][6].rstrip().strip('\"')
+        fighter_2 = response[0][8].rstrip().strip('\"')
         #print(response)
         for line in response:
             # Pad the line because the empty trailing cells are omitted
@@ -98,19 +98,19 @@ class GoogleAPI(Api):
                 line.append('')
             # We do not want to fill all the fields, so if they are empty (or full of bullshit) we ignore them and put 0
             try:
-                result_1 = (int(line[1].rstrip().strip('\"')))
+                result_1 = (int(line[2].rstrip().strip('\"')))
             except ValueError:
                 result_1 = 0
             try:
-                result_2 = (int(line[5].rstrip().strip('\"')))
+                result_2 = (int(line[6].rstrip().strip('\"')))
             except ValueError:
                 result_2 = 0
             try:
-                warnings_1 = (int(line[2].rstrip().strip('\"')))
+                warnings_1 = (int(line[3].rstrip().strip('\"')))
             except ValueError:
                 warnings_1 = 0
             try:
-                warnings_2 = (int(line[4].rstrip().strip('\"')))
+                warnings_2 = (int(line[5].rstrip().strip('\"')))
             except ValueError:
                 warnings_2 = 0
             try:
@@ -124,24 +124,29 @@ class GoogleAPI(Api):
         return Fight(fighter_1, fighter_2, 'finished', rounds_num=len(rounds), rounds=rounds)
 
 
-    def write(self, pairs, fighters, sheet_num, sheet_name=None):
+    def write(self,
+              pairs,
+              fighters,
+              round_num,
+              stage_name,
+              **kwargs):
         # check if sheet exists
         sheets_info = service.spreadsheets().get(spreadsheetId=self._spreadsheet_id).execute()
         sheet_ids = [sheet['properties']['sheetId'] for sheet in sheets_info['sheets']]
-        if sheet_name is None:
-            if sheet_num < 10:
-                sheet_name = f'Группа {sheet_num}'
-            elif sheet_num < 100:
-                sheet_name = f'1/{sheet_num - 10}'
+        if stage_name is None:
+            if round_num < 10:
+                stage_name = f'Группа {round_num}'
+            elif round_num < 100:
+                stage_name = f'1/{round_num - 10}'
             else:
-                sheet_name = 'Финал'
+                stage_name = 'Финал'
         # Store the id:name mapping
-        self.sheet_names[sheet_num] = sheet_name
+        self.sheet_names[round_num] = stage_name
 
-        if not sheet_num in sheet_ids:
+        if not round_num in sheet_ids:
             # If we try to create existing sheet, we get an annoying error response.
             # However, we could delete-create this sheet instead to avoid format errors
-            self.add_sheet(sheet_num, sheet_name, rows=3 + len(pairs)*self.num_rounds)
+            self.add_sheet(round_num, stage_name, rows=3 + len(pairs)*self.num_rounds)
 
         if DEFAULT_SHEET in sheet_ids:
             # remove the initial sheet - it is useless
@@ -149,7 +154,7 @@ class GoogleAPI(Api):
                                                body={'requests':[{'deleteSheet':{'sheetId': DEFAULT_SHEET}}]}).execute()
 
         all_data = []
-        position = get_pair_position(sheet_name, len(pairs), self.num_rounds)
+        position = get_pair_position(stage_name, len(pairs), self.num_rounds)
         format_request = []
 
         for i, pair in enumerate(pairs):
@@ -161,13 +166,13 @@ class GoogleAPI(Api):
             # Merge cells
             if self.num_rounds > 0:
                 format_request += [
-                    {'mergeCells': {'range': {'sheetId': sheet_num,
+                    {'mergeCells': {'range': {'sheetId': round_num,
                                               'startRowIndex': self.num_rounds*i + 2,
                                               'endRowIndex': self.num_rounds*(i+1) + 2,
                                               'startColumnIndex': 1,
                                               'endColumnIndex': 2},
                                     'mergeType': 'MERGE_ALL'}},
-                    {'mergeCells': {'range': {'sheetId': sheet_num,
+                    {'mergeCells': {'range': {'sheetId': round_num,
                                               'startRowIndex': self.num_rounds*(i) + 2,
                                               'endRowIndex': self.num_rounds*(i+1) + 2,
                                               'startColumnIndex': 7,

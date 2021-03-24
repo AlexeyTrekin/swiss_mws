@@ -27,3 +27,7 @@ cap = -8
 
 #
 pairing_function = 'swiss'
+
+# size of the final group
+min_finalists = 2
+max_finalists = 6

@@ -97,9 +97,11 @@ class Tournament:
     """
 
     def __init__(self, rules: TournamentRules,
-                 fighters: List[Fighter] = None):
+                 fighters: List[Fighter] = None,
+                 stage_base_name=None):
 
         self.rules = rules
+        self.stage_base_name = stage_base_name # for naming API instances like google sheets
 
         if fighters is not None:
             self.fighters = fighters
@@ -251,11 +253,14 @@ class Tournament:
         :param round_num: Number of the round to which we should write the pairings
         :return:
         """
-
+        if self.stage_base_name is not None:
+            stage_name = self.stage_base_name + '_' + str(round_num)
+        else:
+            stage_name = None
         fighters_dict = {}
         for f in self.fighters:
             fighters_dict[f.fighter_id] = f
-        return api.write(self.pairings, fighters_dict, round_num)
+        return api.write(self.pairings, fighters_dict, round_num, stage_name=stage_name)
 
     def read_results(self, api, round_num):
         """

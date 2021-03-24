@@ -1,10 +1,10 @@
 ROWS = 100
-COLS = 9
+COLS = 11
 
 
 def get_format_request(sheet_num):
     # set column width
-    widths = {1: 150, 2:50, 3:35, 4:60, 5:35, 6:50, 7:150}
+    widths = {1: 150, 2:50, 3:50, 4:35, 5:10, 6:35, 7:50, 8:50, 9:150}
     request = []
     for col, w in widths.items():
         request.append({
@@ -38,7 +38,7 @@ def get_format_request(sheet_num):
                                   'startRowIndex': 1,
                                   'endRowIndex': ROWS,
                                   'startColumnIndex': 1,
-                                  'endColumnIndex': 4},
+                                  'endColumnIndex': 5},
                         'cell': {"userEnteredFormat": {
                             "backgroundColor": {
                                 "red": 1,
@@ -51,8 +51,8 @@ def get_format_request(sheet_num):
         {'repeatCell': {'range': {'sheetId': sheet_num,
                                   'startRowIndex': 1,
                                   'endRowIndex': ROWS,
-                                  'startColumnIndex': 5,
-                                  'endColumnIndex': 8},
+                                  'startColumnIndex': 6,
+                                  'endColumnIndex': 10},
                         'cell': {"userEnteredFormat": {
                             "backgroundColor": {
                                 "red": 0.6,
@@ -75,13 +75,13 @@ def get_data_request(sheet_name: str):
             {"range": "{}!B1:B1".format(sheet_name),
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
-             "values": [["1 ристалище"]]},
+             "values": [[""]]},
 
-            {"range": "{}!B2:J2".format(sheet_name),
+            {"range": "{}!B2:L2".format(sheet_name),
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
              "values": [
-                 ["Фамилия", "Баллы", "!", "Обоюдки", "!", "Баллы", "Фамилия"]]},
+                 ["Фамилия", "HP", "Бой", "!", "", "!", "Бой", "HP", "Фамилия"]]},
         ]}
     return data_request
 
@@ -115,7 +115,7 @@ def get_pair_position(sheet_name, pair_num, num_rounds):
     # 1-based area
 
     column_begin = 'B'
-    column_end = 'J'
+    column_end = 'L'
 
     row_begin = pair_num * num_rounds + 3  # heading
     row_end = row_begin + num_rounds
@@ -124,4 +124,4 @@ def get_pair_position(sheet_name, pair_num, num_rounds):
 
 
 def get_all_range(sheet_name):
-    return f'{sheet_name}!A1:J{ROWS}'
+    return f'{sheet_name}!A1:L{ROWS}'

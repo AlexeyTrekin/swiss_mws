@@ -103,7 +103,7 @@ class Fighter:
         Legacy - for google api
         :return:
         """
-        return [self.name, '', '']
+        return [self.name, self.rating, '', '']
 
     def add_fight(self, fight: Fight):
         """

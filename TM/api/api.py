@@ -13,11 +13,13 @@ class Api:
               pairs: List[Fight],
               fighters: Dict[str, Fighter],
               round_num: int,
+              stage_name: str,
               **kwargs):
         """
         :param pairs: a list of Fight instances - empty, for the further processing and filling
         :param fighters: a list of Fighters, that covers all the members in pairs, with all the additional Fighter data
         :param round_num: round number
+        :param stage_name: symbolic name for the stage\round
         :return: an ID of the output device (URL, or filename)
         """
         raise NotImplementedError
