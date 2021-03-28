@@ -105,6 +105,9 @@ class Tournament:
 
         if fighters is not None:
             self.fighters = fighters
+            if self.rules.start_rating is not None:
+                for f in self.fighters:
+                    f.rating = self.rules.start_rating
         else:
             self.fighters = []
 

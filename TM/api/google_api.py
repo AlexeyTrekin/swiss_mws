@@ -123,7 +123,6 @@ class GoogleAPI(Api):
 
         return Fight(fighter_1, fighter_2, 'finished', rounds_num=len(rounds), rounds=rounds)
 
-
     def write(self,
               pairs,
               fighters,
@@ -134,12 +133,7 @@ class GoogleAPI(Api):
         sheets_info = service.spreadsheets().get(spreadsheetId=self._spreadsheet_id).execute()
         sheet_ids = [sheet['properties']['sheetId'] for sheet in sheets_info['sheets']]
         if stage_name is None:
-            if round_num < 10:
-                stage_name = f'Группа {round_num}'
-            elif round_num < 100:
-                stage_name = f'1/{round_num - 10}'
-            else:
-                stage_name = 'Финал'
+            stage_name = f'Round {round_num}'
         # Store the id:name mapping
         self.sheet_names[round_num] = stage_name
 

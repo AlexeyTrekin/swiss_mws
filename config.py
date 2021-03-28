@@ -20,14 +20,16 @@ random_pairs = False
 num_areas = 2
 
 # default HP for a fighter
-hp = 35
+hp = 14
+hp_tiebreak = 7
+hp_finals = 35
 
 # the cap is maximum allowed amount of points given
-cap = -8
+cap = -9
 
 #
 pairing_function = 'swiss'
 
 # size of the final group
-min_finalists = 2
-max_finalists = 6
+min_finalists = 3
+max_finalists = 4
