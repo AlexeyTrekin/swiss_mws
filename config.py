@@ -1,5 +1,5 @@
 # Google spreadsheet ID, or None if we want to create a new
-google_doc = '1i9yWRAvFGu0Esct6Yvw-Drq8-pKydmJ37N5-LLh8W7Y'
+google_doc = None #'1i9yWRAvFGu0Esct6Yvw-Drq8-pKydmJ37N5-LLh8W7Y'
 
 # list of google accounts to share the new doc with
 collaborators = ['alexey.trekin@gmail.com', 'kazakovvan@gmail.com'] #, 'mwstablo1@gmail.com', 'mwstablo2@gmail.com ']
@@ -32,4 +32,4 @@ pairing_function = 'swiss'
 
 # size of the final group
 min_finalists = 3
-max_finalists = 4
+max_finalists = 6
