@@ -7,7 +7,7 @@ from TM.api import GoogleAPI
 
 import config
 
-from stages import selection_stage, tiebreak_stage, final_stage
+from stages import selection_stage
 
 
 def fighters_from_file(fighters_file):
@@ -47,11 +47,12 @@ def main():
 
     finalists, tiebreak = selection_stage(fighters, api, restart=restart)
     if tiebreak:
-        finalists += tiebreak_stage(tiebreak, api,
-                                    config.min_finalists-len(finalists),
-                                    config.max_finalists-len(finalists), 10)
+        print(f'Something strange happened! Tiebreak should not happen')
+    else:
+        finalists.sort(key=lambda x: x.rating, reverse=True)
+        for f in finalists:
+            print(f)
 
-    final_stage(finalists, api)
     print('Exiting')
 
 

@@ -2,7 +2,7 @@
 google_doc = None #'1i9yWRAvFGu0Esct6Yvw-Drq8-pKydmJ37N5-LLh8W7Y'
 
 # list of google accounts to share the new doc with
-collaborators = ['alexey.trekin@gmail.com', 'kazakovvan@gmail.com'] #, 'mwstablo1@gmail.com', 'mwstablo2@gmail.com ']
+collaborators = ['alexey.trekin@gmail.com'] #, 'mwstablo1@gmail.com', 'mwstablo2@gmail.com ']
 
 # Base name for csv files
 csv_name = 'mws'
@@ -17,19 +17,17 @@ main_api = 'google'
 random_pairs = False
 
 # number of the fight areas to spread the fights to
-num_areas = 2
+num_areas = 1
 
 # default HP for a fighter
-hp = 14
-hp_tiebreak = 7
-hp_finals = 35
+hp = 24
 
 # the cap is maximum allowed amount of points given
-cap = -9
+cap = -6
 
 #
 pairing_function = 'swiss'
 
 # size of the final group
-min_finalists = 3
-max_finalists = 6
+min_finalists = 1
+max_finalists = 16
