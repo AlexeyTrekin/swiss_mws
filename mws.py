@@ -2,7 +2,7 @@ import sys
 import random
 from typing import List
 from TM.tournament import Tournament, Fighter, TournamentRules, Round
-from TM.api import GoogleAPI
+from TM.api import GoogleAPI, CsvApi
 from TM.pairings import SwissPairings, RoundPairings
 
 import config
@@ -152,18 +152,18 @@ def main():
     if config.pairing_function == 'round':
         pairing_function = RoundPairings()
     else:
-        pairing_function = SwissPairings()
+        pairing_function = SwissPairings(max_diff=config.max_diff)
     t = start(fighters_file, pairing_function)
     # API setup
 
     #if config.main_api == 'google':
-    api_1 = GoogleAPI(config.google_doc, num_areas=config.num_areas,
-                           name="MwSB", collaborators=config.collaborators)
+    #api_1 = GoogleAPI(config.google_doc, num_areas=config.num_areas,
+    #                       name="MwSB", collaborators=config.collaborators)
         #api_2 = CsvApi(config.csv_folder, config.csv_name)
    # else:
     #    api_2 = GoogleAPI(config.google_doc, 2,
      #                      "MwSB", collaborators=config.collaborators)
-        #api_1 = CsvApi(config.csv_folder, config.csv_name)
+    api_1 = CsvApi(config.csv_folder, config.csv_name)
 
     #api_1 = HttpApi(num_areas=config.num_areas)
     #api_2 = CsvApi(config.csv_folder, config.csv_name, decorate=False)

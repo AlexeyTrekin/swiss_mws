@@ -21,7 +21,12 @@ class CsvApi(Api):
         self.path = Path(folder)
         self.prefix = prefix
 
-    def write(self, pairs, fighters, round_num):
+    def write(self,
+              pairs,
+              fighters,
+              round_num,
+              stage_name,
+              **kwargs):
         filename = self.path/(self.prefix+str(round_num) + '.csv')
         with open(filename, 'w') as dst:
             dst.write('RED, Red HP, Red score, Blue score, Blue HP, BLUE\n')

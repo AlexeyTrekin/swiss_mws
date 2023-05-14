@@ -8,10 +8,7 @@ collaborators = ['alexey.trekin@gmail.com'] #, 'mwstablo1@gmail.com', 'mwstablo2
 csv_name = 'mws'
 
 # Folder for csv files
-# csv_folder = 'D:/tmp'
-
-# main api - google or csv
-main_api = 'google'
+csv_folder = './'
 
 # randomize the pairs in the first round or not
 random_pairs = False
@@ -27,6 +24,10 @@ cap = -6
 
 #
 pairing_function = 'swiss'
+# maximum difference between the fighters rating for the pair
+# If it cannot be achieved, classic ("old") swiss pairing is used
+max_diff = 2
+#
 
 # size of the final group
 min_finalists = 1
