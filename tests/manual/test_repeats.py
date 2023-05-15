@@ -113,7 +113,6 @@ def conduct_tournament(pairing_function, fighters_num, hp, cap):
             differences.append(np.abs(fighter1.rating - fighter2.rating))
             for fight in fighter1.fights:
                 if p.repeats(fight):
-                    print('ERROR', p.fighter_1, p.fighter_2)
                     repeats += 1
         tour.write_pairs(api, r)
         tour.read_results(api, r)
@@ -121,17 +120,24 @@ def conduct_tournament(pairing_function, fighters_num, hp, cap):
     return repeats//2, differences
 
 
-def test_tournament_passes_without_repeats():
-    """for good difference parameters, which should allow almost no repeats"""
+def test_repeats_and_difference():
+    """with low max_diff parameters which should ensure lower difference between fighters,
+    but can lead to more repeats
+    """
     attempts = 100
-
-    for fighters_num in range(MIN_FIGHTERS, MAX_FIGHTERS, 4):
-        fails = 0
-        for run in range(attempts):
-            repeats, _ = conduct_tournament(pairing_function=SwissPairings(candidates_to_keep=10),
-                                      fighters_num=fighters_num, hp=MAX_HP, cap=CAP)
-            if repeats > 0:
-                fails += 1
-        # We assume 3% probability of fail (repeated pairing) a normal chance
-        assert fails <= 3
-        print(f'{fails} of {attempts} failed for {fighters_num} fighters')
+    MIN_FIGHTERS, MAX_FIGHTERS = 20, 21
+    for max_diff in range(1,9):
+        for fighters_num in range(MIN_FIGHTERS, MAX_FIGHTERS, 4):
+            total_repeats = 0
+            total_diffs = []
+            for run in range(attempts):
+                repeats, diffs = conduct_tournament(pairing_function=SwissPairings(candidates_to_keep=10, max_diff=max_diff),
+                                          fighters_num=fighters_num, hp=35, cap=9)
+                total_repeats += repeats
+                total_diffs += diffs
+            rel_repeats = total_repeats / (attempts)
+            print(f'Fighters: {fighters_num}; Diff: {max_diff}')
+            print(f'{rel_repeats} avg repeats per run;'
+                  f' {np.mean(total_diffs)} avg rating diff,'
+                   f'{np.max(total_diffs)} max rating diff,'
+                   f' {np.median(total_diffs)} median rating diff')

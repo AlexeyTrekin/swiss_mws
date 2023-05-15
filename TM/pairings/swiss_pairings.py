@@ -61,7 +61,7 @@ class SwissPairings(Pairings):
             # In some cases the algorithm will fail and give zero candidates for the current standings.
             # It is a rare situation in real parameters, but we must have a solution for it
             if len(candidates) == 0:
-                warnings.warn("Pairings failed to match without repeared fight!")
+                warnings.warn("Pairings failed to match without repeated fight!")
                 return swiss_pairings_old(fighters)
         # candidates = sorted(candidates, key=lambda candidate: candidate.max_diff*len(standings)*10 + candidate.tot_diff)
         return candidates[0].pairs
