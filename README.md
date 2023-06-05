@@ -1,64 +1,48 @@
-A package for console application to make a custom swiss tournament system
+A server application for HEMA tournament management.
 
-Features:
-- Read fighters list from a text\csv file
-- Make pairs
-- Save pairs to csv file
-- Save fighters standings to csv file (for display) and txt (for statistics)
-- Read round results from a csv file
+It stores all the information about the current tournament.
+REST api allows to connect with client app (secretary web page) and
+- get the fights to conduct
+- save the results to the server
 
-# Installation
-1. Install Python 3.7.4 +
-2. Clone repository or copy this folder to your computer
-3. run tests (not implemented yet)
+# Requirements: 
+- Docker engine + docker compose plugin. 
+- Internet connection with static IP address or local network to connect the secretary tables
 
-# Usage:
+# Secretary app
+Use https://github.com/AlexeyTrekin/mws-tablo
+(currently not working with this version)
 
-1. Setup the config.py file. Add all the secretaries' e-mails to 'collaborators'; let doogle_doc=None if you do not have it yet.
+# How to manage your own tournament
 
-1. Type in command line
-   
-    ```bash
-    python mws.py fighters_list
-    ``` 
-    where fighters_list is a text file with the fighters names each in a new row (see tests for examples).
-    Now the script is running and fighters are initialized with 12 HP (see response "Tournament ready")
-    
-2. To calculate pairs and start a new round, type
+## Configure the tournament:
+Open `config.py` file and set the values you need.
+Important options:
+- stages: describes the stages of the tournament with different rules (pools, playoffs, finals etc.).
+  - every stage depends on the previous one
+  - every stage has its criteria for transition to the next stage
+  - stages have their own rules (number or rounds, rating rules, pairing functions etc)
+- secretaries: initializes the secretary credentials (login, password) for every area. They will connect with these logins from their apps
+- admin: administrator api token to manage the tournament stages
 
-    ```bash
-   round 
-   ```
-   The link to the google sheet will be printed into command line
- 3. Open the link for the display and the secretaries
- 
- 3. Enter all the results of each fight into the google sheet. Save the sheet with ctrl+s to ensure all is OK
- 
- 4.  Type into command line
-    
-    ```bash
-    round
-    ```
-    to enter the results of the fights into the tournament and make a new sheet in google docs
-    
- 5. If the working directory is clear, and the process did not interrupt, 
-    you can use automatic filenames typing just:
-    ```bash
-    round
-    update 
-    ```
-    and adding the fights score in-place into the file 'N_pairs.csv', N is round number
-    
- 5. If after a certain round the conditions of the finals are met, 
-    the app will report it and the list of the finalists into command line.
-    Type
-    ```bash
-    exit
-    ```
-    to close the app
-    
- 6. If on a certain stage the results are corrupted, you can enter the right numbers into the sheet and do
- ```bash
- restart <N>
- ```
- where N is number of correctly entered rounds
+You can use sample configs from `configs/` directory as examples, or as ready tournament rulesets
+## Add fighters
+Write them to the file "fighters.txt" one in a string
+
+## Start the tournament:
+Run 
+`docker compose up`
+
+## Connect from secretary workspaces
+Use login/password pairs set in config
+
+## Connect the tournament display app
+Write it?
+
+# License
+MIT
+
+# Contributing
+If you have found an error, or have feature request, use github issues on this project.
+
+If you want to help, we are open to pull-requests with valuable features that correspond to the project goals.ß

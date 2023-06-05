@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Tuple
 
 from .pairings import Pairings
-from TM.tournament import Fighter
+from ...model import Fighter
 
 
 class SwissPairings(Pairings):
@@ -21,7 +21,7 @@ class SwissPairings(Pairings):
         self.max_diff = max_diff
         self.candidates_to_keep = candidates_to_keep
 
-    def __call__(self, fighters):
+    def __call__(self, fighters: List[Fighter]) -> List[Tuple[Fighter, Fighter]]:
         """Returns a list of pairs of players for the next round of a match in this tour.
 
         Assuming that there are an even number of players registered, each player

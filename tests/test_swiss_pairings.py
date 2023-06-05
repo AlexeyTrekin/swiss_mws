@@ -1,6 +1,6 @@
 import pytest
 from random import randint
-from TM.pairings import SwissPairings
+from TM.functional.pairings import SwissPairings
 from TM.tournament import Fighter
 
 MAX_FIGHTERS = 20

@@ -1,0 +1,2 @@
+class TMError(Exception):
+    pass

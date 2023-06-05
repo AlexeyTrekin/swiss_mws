@@ -1,6 +1,6 @@
 from random import randint, choice
-from TM.tournament import Tournament, Fighter, Fight, FightStatus, TournamentRules
-from TM.pairings import SwissPairings
+from TM.tournament import Tournament, Fighter, FightStatus, TournamentRules
+from TM.functional.pairings import SwissPairings
 
 # Tournament size varaints
 MIN_FIGHTERS = 8

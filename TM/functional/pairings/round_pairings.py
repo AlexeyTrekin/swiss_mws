@@ -1,9 +1,12 @@
+from typing import List, Tuple
+
 from .pairings import Pairings
+from ...model import Fighter
 
 
 class RoundPairings(Pairings):
     #
-    def __call__(self, fighters):
+    def __call__(self, fighters: List[Fighter]) -> List[Tuple[Fighter, Fighter]]:
         """
         Make pairings for every pair in 'fighters', arranging it so that none will have 2 fights in a row
         (except case with 3 or 4 fighters)
@@ -42,7 +45,6 @@ def subround_consequent(fighters):
         else:
             pairings.append((fighters[i], fighters[(i + 1) % len(fighters)]))
         i += 2
-    # Special case - when the number of fighters is even,
 
     return pairings
 
